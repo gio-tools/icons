@@ -57,12 +57,16 @@ func mi(data []byte) *widget.Icon {
 }
 
 type iconBrowser struct {
-	searchResponses chan<- []int
+	searchResponses chan<- searchResponse
+	searchCurSeq    int
 	searchInput     widget.Editor
-	searchBusy      bool
-	searchQueued    bool
 	resultList      widget.List
 	matchedIndices  []int
+}
+
+type searchResponse struct {
+	indices []int
+	seq     int
 }
 
 func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
@@ -77,7 +81,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 		case "U":
 			if ed := &ib.searchInput; ed.Focused() {
 				ed.SetText("")
-				go ib.runSearch()
+				ib.runSearch()
 			}
 		}
 	case 0:
@@ -103,12 +107,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 func (ib *iconBrowser) layout(gtx C, th *material.Theme) D {
 	for _, e := range ib.searchInput.Events() {
 		if _, ok := e.(widget.ChangeEvent); ok {
-			if !ib.searchBusy {
-				ib.searchBusy = true
-				go ib.runSearch()
-			} else if !ib.searchQueued {
-				ib.searchQueued = true
-			}
+			ib.runSearch()
 		}
 	}
 	if ib.matchedIndices == nil {
@@ -182,25 +181,31 @@ func (ib *iconBrowser) layResults(gtx C, th *material.Theme, indices []int) D {
 }
 
 func (ib *iconBrowser) runSearch() {
-	start := time.Now()
-	defer func() {
-		if printSearchTimes {
-			log.Println(time.Now().Sub(start))
+	ib.searchCurSeq++
+	resp := searchResponse{
+		indices: nil,
+		seq:     ib.searchCurSeq,
+	}
+	go func() {
+		start := time.Now()
+		defer func() {
+			ib.searchResponses <- resp
+			if printSearchTimes {
+				log.Println(time.Now().Sub(start))
+			}
+		}()
+		input := strings.ToLower(ib.searchInput.Text())
+		if input == "" {
+			return
+		}
+		resp.indices = make([]int, 0, len(allEntries)/2)
+		for i := range allEntries {
+			e := &allEntries[i]
+			if strings.Contains(e.key, input) {
+				resp.indices = append(resp.indices, i)
+			}
 		}
 	}()
-	input := strings.ToLower(ib.searchInput.Text())
-	if input == "" {
-		ib.searchResponses <- nil
-		return
-	}
-	matches := make([]int, 0, len(allEntries)/2)
-	for i := range allEntries {
-		e := &allEntries[i]
-		if strings.Contains(e.key, input) {
-			matches = append(matches, i)
-		}
-	}
-	ib.searchResponses <- matches
 }
 
 type rule struct {
@@ -246,7 +251,7 @@ func run() error {
 		ContrastBg: color.NRGBA{50, 180, 205, 255},
 	}
 
-	searchResponses := make(chan []int)
+	searchResponses := make(chan searchResponse)
 
 	ib := iconBrowser{
 		searchResponses: searchResponses,
@@ -258,12 +263,9 @@ func run() error {
 	for {
 		select {
 		case r := <-searchResponses:
-			ib.matchedIndices = r
-			if ib.searchQueued {
-				go ib.runSearch()
-				ib.searchQueued = false
-			} else {
-				ib.searchBusy = false
+			if r.seq == ib.searchCurSeq {
+				ib.matchedIndices = r.indices
+				ib.searchCurSeq = 0
 			}
 			win.Invalidate()
 		case e := <-win.Events():
