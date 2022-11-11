@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"image"
 	"image/color"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"gioui.org/app"
@@ -30,8 +32,15 @@ type (
 
 var iconSearch = mi(icons.ActionSearch)
 
+// CLI flags.
+var (
+	printFrameTimes  bool
+	printSearchTimes bool
+)
+
 type iconEntry struct {
 	name  string
+	key   string // The name but all lowercase for search matching.
 	icon  *widget.Icon
 	click gesture.Click
 }
@@ -48,33 +57,116 @@ func mi(data []byte) *widget.Icon {
 }
 
 type iconBrowser struct {
-	searchInput    widget.Editor
-	resultList     widget.List
-	matchedIndices []int
+	searchResponses chan<- []int
+	searchInput     widget.Editor
+	searchBusy      bool
+	searchQueued    bool
+	resultList      widget.List
+	matchedIndices  []int
+}
+
+func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
+	if e.State != key.Press {
+		return
+	}
+	switch e.Modifiers {
+	case key.ModCtrl:
+		switch e.Name {
+		case "L", key.NameSpace:
+			ib.searchInput.Focus()
+		case "U":
+			if ed := &ib.searchInput; ed.Focused() {
+				ed.SetText("")
+				go ib.runSearch()
+			}
+		}
+	case 0:
+		switch e.Name {
+		case "/":
+			ib.searchInput.Focus()
+		case key.NameEscape:
+			if ib.searchInput.Focused() {
+				key.FocusOp{Tag: nil}.Add(gtx.Ops)
+			}
+		case key.NameHome:
+			ib.resultList.List.Position.First = 0
+			ib.resultList.List.Position.Offset = 0
+		case key.NameEnd:
+			// The number of results plus one will always be greater than the number
+			// of children managed by the list (even if it were a single column),
+			// thus ensuring this will always bring it to the very end.
+			ib.resultList.List.Position.First = len(ib.matchedIndices) + 1
+		}
+	}
 }
 
 func (ib *iconBrowser) layout(gtx C, th *material.Theme) D {
+	for _, e := range ib.searchInput.Events() {
+		if _, ok := e.(widget.ChangeEvent); ok {
+			if !ib.searchBusy {
+				ib.searchBusy = true
+				go ib.runSearch()
+			} else if !ib.searchQueued {
+				ib.searchQueued = true
+			}
+		}
+	}
+	if ib.matchedIndices == nil {
+		ib.matchedIndices = allIndices
+	}
 	paint.Fill(gtx.Ops, th.Bg)
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return ib.layHeader(gtx, th, len(ib.matchedIndices))
+		}),
+		layout.Rigid(rule{color: th.Fg}.layout),
+		layout.Flexed(1, func(gtx C) D {
+			return ib.layResults(gtx, th, ib.matchedIndices)
+		}),
+	)
+}
+
+func (ib *iconBrowser) layHeader(gtx C, th *material.Theme, n int) D {
+	searchEd := material.Editor(th, &ib.searchInput, "Search...")
+	numLbl := material.Body2(th, fmt.Sprintf("%d", n))
+	numLbl.Font.Weight = text.Bold
+	iconsLbl := material.Caption(th, " icons")
+	return layout.UniformInset(16).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return iconSearch.Layout(gtx, th.Fg)
+			}),
+			layout.Rigid(layout.Spacer{Width: 16}.Layout),
+			layout.Flexed(1, searchEd.Layout),
+			layout.Rigid(numLbl.Layout),
+			layout.Rigid(iconsLbl.Layout),
+		)
+	})
+}
+
+func (ib *iconBrowser) layResults(gtx C, th *material.Theme, indices []int) D {
+	const weight = 1.0 / 3.0
 	var rows []layout.Widget
-	for i := 0; i < len(allEntries); i += 3 {
+	for i := 0; i < len(indices); i += 3 {
 		var cells []layout.FlexChild
 		for n := 0; n < 3; n++ {
-			index := i + n
-			cells = append(cells, layout.Flexed(1.0/3.0, func(gtx C) D {
-				if index >= len(allEntries) {
-					return D{}
-				}
-				icData := &allEntries[index]
-				name := material.Body2(th, icData.name)
-				name.Alignment = text.Middle
+			indexIndex := i + n
+			if indexIndex >= len(indices) {
+				cells = append(cells, layout.Flexed(weight, emptyWidget))
+				continue
+			}
+			entry := &allEntries[indices[indexIndex]]
+			cells = append(cells, layout.Flexed(weight, func(gtx C) D {
+				nameLbl := material.Body2(th, entry.name)
+				nameLbl.Alignment = text.Middle
 				return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						gtx.Constraints.Max.X = 48
 						gtx.Constraints.Max.Y = 48
-						return icData.icon.Layout(gtx, th.Fg)
+						return entry.icon.Layout(gtx, th.Fg)
 					}),
 					layout.Rigid(layout.Spacer{Height: 10}.Layout),
-					layout.Rigid(name.Layout),
+					layout.Rigid(nameLbl.Layout),
 				)
 			}))
 		}
@@ -84,21 +176,61 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) D {
 			})
 		})
 	}
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return D{} // TODO the search input
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return material.List(th, &ib.resultList).Layout(gtx, len(rows), func(gtx C, i int) D {
-				return rows[i](gtx)
-			})
-		}),
-	)
+	return material.List(th, &ib.resultList).Layout(gtx, len(rows), func(gtx C, i int) D {
+		return rows[i](gtx)
+	})
 }
 
-func run(showFrameTimes bool) error {
-	updates := make(chan any)
+func (ib *iconBrowser) runSearch() {
+	start := time.Now()
+	defer func() {
+		if printSearchTimes {
+			log.Println(time.Now().Sub(start))
+		}
+	}()
+	input := strings.ToLower(ib.searchInput.Text())
+	if input == "" {
+		ib.searchResponses <- nil
+		return
+	}
+	matches := make([]int, 0, len(allEntries)/2)
+	for i := range allEntries {
+		e := &allEntries[i]
+		if strings.Contains(e.key, input) {
+			matches = append(matches, i)
+		}
+	}
+	ib.searchResponses <- matches
+}
 
+type rule struct {
+	width int
+	color color.NRGBA
+	axis  layout.Axis
+}
+
+func (rl rule) layout(gtx C) D {
+	if rl.width == 0 {
+		rl.width = 1
+	}
+	size := image.Point{gtx.Constraints.Max.X, rl.width}
+	if rl.axis == layout.Vertical {
+		size = image.Point{rl.width, gtx.Constraints.Max.Y}
+	}
+	rect := clip.Rect{Max: size}.Op()
+	paint.FillShape(gtx.Ops, rl.color, rect)
+	return D{Size: size}
+}
+
+func emptyWidget(gtx C) D { return D{} }
+
+const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
+	"|/" +
+	"|" + key.NameEscape +
+	"|" + key.NameHome +
+	"|" + key.NameEnd
+
+func run() error {
 	win := app.NewWindow(
 		app.Size(900, 800),
 		app.Title("GioUI Icon Browser"),
@@ -114,16 +246,25 @@ func run(showFrameTimes bool) error {
 		ContrastBg: color.NRGBA{50, 180, 205, 255},
 	}
 
+	searchResponses := make(chan []int)
+
 	ib := iconBrowser{
-		searchInput: widget.Editor{SingleLine: true, Submit: true},
-		resultList:  widget.List{List: layout.List{Axis: layout.Vertical}},
+		searchResponses: searchResponses,
+		searchInput:     widget.Editor{SingleLine: true, Submit: true},
+		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
 	}
 
 	var ops op.Ops
 	for {
 		select {
-		case u := <-updates:
-			_ = u
+		case r := <-searchResponses:
+			ib.matchedIndices = r
+			if ib.searchQueued {
+				go ib.runSearch()
+				ib.searchQueued = false
+			} else {
+				ib.searchBusy = false
+			}
 			win.Invalidate()
 		case e := <-win.Events():
 			switch e := e.(type) {
@@ -133,17 +274,16 @@ func run(showFrameTimes bool) error {
 				// Process any key events since the previous frame.
 				for _, ke := range gtx.Events(win) {
 					if ke, ok := ke.(key.Event); ok {
-						// a.handleKeyEvent(ke)
-						_ = ke
+						ib.handleKeyEvent(gtx, ke)
 					}
 				}
 				// Gather key input on the entire window area.
 				areaStack := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops)
-				key.InputOp{Tag: win, Keys: key.NameSpace + "|/"}.Add(gtx.Ops)
+				key.InputOp{Tag: win, Keys: topLevelKeySet}.Add(gtx.Ops)
 				ib.layout(gtx, th)
 				areaStack.Pop()
 				e.Frame(gtx.Ops)
-				if showFrameTimes {
+				if printFrameTimes {
 					log.Println(time.Now().Sub(start))
 				}
 			case system.DestroyEvent:
@@ -154,11 +294,12 @@ func run(showFrameTimes bool) error {
 }
 
 func main() {
-	showFrameTimes := flag.Bool("print-frame-times", false, "Print out how long each frame takes.")
+	flag.BoolVar(&printFrameTimes, "print-frame-times", false, "Print out how long each frame takes.")
+	flag.BoolVar(&printSearchTimes, "print-search-times", false, "Print out how long each search run takes.")
 	flag.Parse()
 
 	go func() {
-		if err := run(*showFrameTimes); err != nil {
+		if err := run(); err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(0)
