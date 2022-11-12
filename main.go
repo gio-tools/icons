@@ -110,6 +110,7 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) D {
 	for _, e := range ib.searchInput.Events() {
 		if _, ok := e.(widget.ChangeEvent); ok {
 			ib.runSearch()
+			break
 		}
 	}
 	if ib.matchedIndices == nil {
