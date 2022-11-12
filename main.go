@@ -57,7 +57,7 @@ func mi(data []byte) *widget.Icon {
 }
 
 type iconBrowser struct {
-	searchResponses chan<- searchResponse
+	searchResponses chan searchResponse
 	searchCurSeq    int
 	searchInput     widget.Editor
 	resultList      widget.List
@@ -251,10 +251,8 @@ func run() error {
 		ContrastBg: color.NRGBA{50, 180, 205, 255},
 	}
 
-	searchResponses := make(chan searchResponse)
-
 	ib := iconBrowser{
-		searchResponses: searchResponses,
+		searchResponses: make(chan searchResponse),
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
 		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
 	}
@@ -262,7 +260,7 @@ func run() error {
 	var ops op.Ops
 	for {
 		select {
-		case r := <-searchResponses:
+		case r := <-ib.searchResponses:
 			if r.seq == ib.searchCurSeq {
 				ib.matchedIndices = r.indices
 				ib.searchCurSeq = 0
