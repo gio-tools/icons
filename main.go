@@ -38,7 +38,7 @@ var (
 	printSearchTimes bool
 )
 
-const copyAlertDuration = time.Second * 3
+const copyNotifDuration = time.Second * 3
 
 var iconSearch = mi(icons.ActionSearch)
 
@@ -136,7 +136,7 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) {
 			return ib.layResults(gtx, th, ib.matchedIndices)
 		}),
 	)
-	if time.Now().Sub(ib.copyNotif.at) > copyAlertDuration {
+	if time.Now().Sub(ib.copyNotif.at) > copyNotifDuration {
 		ib.copyNotif = copyNotif{}
 	}
 	if ib.copyNotif.msg != "" {
@@ -226,7 +226,7 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 		}
 		op.InvalidateOp{}.Add(gtx.Ops)
 		go func() {
-			time.Sleep(copyAlertDuration + time.Millisecond*100)
+			time.Sleep(copyNotifDuration + time.Millisecond*100)
 			ib.win.Invalidate()
 		}()
 	}
@@ -345,21 +345,21 @@ func run() error {
 				ib.matchedIndices = r.indices
 				ib.searchCurSeq = 0
 			}
-			win.Invalidate()
-		case e := <-win.Events():
+			ib.win.Invalidate()
+		case e := <-ib.win.Events():
 			switch e := e.(type) {
 			case system.FrameEvent:
 				start := time.Now()
 				gtx := layout.NewContext(&ops, e)
 				// Process any key events since the previous frame.
-				for _, ke := range gtx.Events(win) {
+				for _, ke := range gtx.Events(ib.win) {
 					if ke, ok := ke.(key.Event); ok {
 						ib.handleKeyEvent(gtx, ke)
 					}
 				}
 				// Gather key input on the entire window area.
 				areaStack := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops)
-				key.InputOp{Tag: win, Keys: topLevelKeySet}.Add(gtx.Ops)
+				key.InputOp{Tag: ib.win, Keys: topLevelKeySet}.Add(gtx.Ops)
 				ib.layout(gtx, th)
 				areaStack.Pop()
 				e.Frame(gtx.Ops)
