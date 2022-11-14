@@ -43,11 +43,11 @@ const copyNotifDuration = time.Second * 3
 var iconSearch = mi(icons.ActionSearch)
 
 type iconEntry struct {
-	name  string
-	key   string // The name but all lowercase for search matching.
-	vn    string // The variable name (abbreviating from `varName` saves ~4kb on `data.go` file size).
-	icon  *widget.Icon
-	click gesture.Click
+	name    string
+	key     string // The name but all lowercase for search matching.
+	varName string
+	icon    *widget.Icon
+	click   gesture.Click
 }
 
 // mi (stands for `must icon`) returns a new `*widget.Icon` for the given byte
@@ -218,10 +218,10 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 		}
 	}
 	if clicked {
-		varName := fmt.Sprintf("icons.%s", en.vn)
-		ib.win.WriteClipboard(varName)
+		varPath := fmt.Sprintf("icons.%s", en.varName)
+		ib.win.WriteClipboard(varPath)
 		ib.copyNotif = copyNotif{
-			msg: fmt.Sprintf("%q copied!", varName),
+			msg: fmt.Sprintf("%q copied!", varPath),
 			at:  time.Now(),
 		}
 		op.InvalidateOp{}.Add(gtx.Ops)
