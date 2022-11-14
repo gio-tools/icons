@@ -14,6 +14,7 @@ const srcHeader = `// This is generated code. DO NOT EDIT
 package main
 
 import (
+	"gioui.org/gesture"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -25,6 +26,8 @@ func init() {
 		allIndices[i] = i
 	}
 }
+
+var _g0 = gesture.Click{}
 
 var allEntries = [...]iconEntry{
 `
@@ -63,7 +66,7 @@ func main() {
 		log.Fatalf("writing source header: %v", err)
 	}
 	for _, name := range names {
-		fmt.Fprintf(out, "\t{name: %q, key: %q, varName: %q, icon: mi(icons.%s)},\n", name, strings.ToLower(name), name, name)
+		fmt.Fprintf(out, "\t{%q, %q, %q, mi(icons.%s), _g0},\n", name, strings.ToLower(name), name, name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)
