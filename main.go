@@ -43,6 +43,7 @@ var (
 type iconEntry struct {
 	name  string
 	key   string // The name but all lowercase for search matching.
+	vn    string // The variable name (abbreviating from `varName` saves ~4kb on `data.go` file size).
 	icon  *widget.Icon
 	click gesture.Click
 }

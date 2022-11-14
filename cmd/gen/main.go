@@ -63,7 +63,7 @@ func main() {
 		log.Fatalf("writing source header: %v", err)
 	}
 	for _, name := range names {
-		fmt.Fprintf(out, "\t{name: %q, key: %q, icon: mi(icons.%s)},\n", name, strings.ToLower(name), name)
+		fmt.Fprintf(out, "\t{name: %q, key: %q, vn: %q, icon: mi(icons.%s)},\n", name, strings.ToLower(name), name, name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)
