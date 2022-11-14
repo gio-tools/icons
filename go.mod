@@ -3,9 +3,10 @@ module github.com/steverusso/gio-icon-browser
 go 1.19
 
 require (
-	gioui.org v0.0.0-20221109144551-4f5a6b321284
-	golang.org/x/exp/shiny v0.0.0-20221109134031-9ce248df8de5
-	golang.org/x/tools v0.2.0
+	gioui.org v0.0.0-20221004231135-80196f3c3ed3
+	github.com/steverusso/giofonts v0.0.0-20221114043900-227d6a023e75
+	golang.org/x/exp/shiny v0.0.0-20220827204233-334a2380cb91
+	golang.org/x/tools v0.3.0
 )
 
 require (
@@ -15,7 +16,7 @@ require (
 	github.com/gioui/uax v0.2.1-0.20220819135011-cda973fac06d // indirect
 	github.com/go-text/typesetting v0.0.0-20220411150340-35994bc27a7b // indirect
 	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
-	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/mod v0.7.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

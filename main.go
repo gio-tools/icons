@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"gioui.org/app"
-	"gioui.org/font/gofont"
 	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -24,6 +23,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/steverusso/giofonts/asap"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -245,7 +245,7 @@ func run() error {
 	)
 	win.Perform(system.ActionCenter)
 
-	th := material.NewTheme(gofont.Collection())
+	th := material.NewTheme(asap.Collection())
 	th.TextSize = 17
 	th.Palette = material.Palette{
 		Bg:         color.NRGBA{17, 21, 24, 255},
