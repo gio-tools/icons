@@ -15,7 +15,7 @@ package main
 
 import (
 	"gioui.org/gesture"
-	"golang.org/x/exp/shiny/materialdesign/icons"
+	. "golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 var allIndices []int
@@ -66,7 +66,7 @@ func main() {
 		log.Fatalf("writing source header: %v", err)
 	}
 	for _, name := range names {
-		fmt.Fprintf(out, "\t{%q, %q, %q, mi(icons.%s), _g0},\n", name, strings.ToLower(name), name, name)
+		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s), _g0},\n", name, strings.ToLower(name), name, name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)
