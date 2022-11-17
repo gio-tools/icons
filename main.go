@@ -286,7 +286,7 @@ func (ib *iconBrowser) runSearch() {
 		resp.indices = make([]int, 0, len(allEntries)/2)
 		for i := range allEntries {
 			e := &allEntries[i]
-			if strings.Contains(e.key, input) {
+			if strings.Contains(e.key, input) || strings.Contains(strings.ToLower(e.name), input) {
 				resp.indices = append(resp.indices, i)
 			}
 		}
