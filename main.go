@@ -23,7 +23,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/steverusso/giofonts/asap"
+	"github.com/steverusso/giofonts/sourcesanspro"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -321,7 +321,7 @@ func run() error {
 	)
 	win.Perform(system.ActionCenter)
 
-	th := material.NewTheme(asap.Collection())
+	th := material.NewTheme(sourcesanspro.Collection())
 	th.TextSize = 17
 	th.Palette = material.Palette{
 		Bg:         color.NRGBA{15, 15, 15, 255},

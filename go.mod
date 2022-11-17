@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	gioui.org v0.0.0-20221004231135-80196f3c3ed3
-	github.com/steverusso/giofonts v0.0.0-20221114043900-227d6a023e75
+	github.com/steverusso/giofonts v0.0.0-20221117031707-7a1951aeea0d
 	golang.org/x/exp/shiny v0.0.0-20220827204233-334a2380cb91
 	golang.org/x/tools v0.3.0
 )
