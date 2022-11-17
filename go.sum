@@ -15,8 +15,8 @@ github.com/gioui/uax v0.2.1-0.20220819135011-cda973fac06d h1:ro1W5kY1pVBLHy4GokZ
 github.com/gioui/uax v0.2.1-0.20220819135011-cda973fac06d/go.mod h1:b6uGh9ySJPVQG/RdiI88bE5sUGDk6vzzRujv1BAeuJc=
 github.com/go-text/typesetting v0.0.0-20220411150340-35994bc27a7b h1:WINlj3ANt+CVrO2B4NGDHRlPvEWZPxjhb7z+JKypwXI=
 github.com/go-text/typesetting v0.0.0-20220411150340-35994bc27a7b/go.mod h1:ZNYu5saGoMOqtkVH5T8onTwhzenDUVszI+5WFHJRaxQ=
-github.com/steverusso/giofonts v0.0.0-20221114043900-227d6a023e75 h1:/igS8Mo1eP0ao/aAmbXXzFO28G0ORnoTLpEOS26WoSs=
-github.com/steverusso/giofonts v0.0.0-20221114043900-227d6a023e75/go.mod h1:cZdekKUT0qXGuYbjuNrq5oPfB4QvIbaMPz12lLbnKxE=
+github.com/steverusso/giofonts v0.0.0-20221117031707-7a1951aeea0d h1:NznowqJv+ES4AvkvkL6GycW+cx93hr8VFSycej5OSbA=
+github.com/steverusso/giofonts v0.0.0-20221117031707-7a1951aeea0d/go.mod h1:cZdekKUT0qXGuYbjuNrq5oPfB4QvIbaMPz12lLbnKxE=
 golang.org/x/exp/shiny v0.0.0-20220827204233-334a2380cb91 h1:ryT6Nf0R83ZgD8WnFFdfI8wCeyqgdXWN4+CkFVNPAT0=
 golang.org/x/exp/shiny v0.0.0-20220827204233-334a2380cb91/go.mod h1:VjAR7z0ngyATZTELrBSkxOOHhhlnVUxDye4mcjx5h/8=
 golang.org/x/image v0.0.0-20210504121937-7319ad40d33e/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
