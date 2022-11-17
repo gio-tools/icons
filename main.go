@@ -246,7 +246,7 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 	nameLbl := material.Body2(th, en.name)
 	nameLbl.Alignment = text.Middle
 	m := op.Record(gtx.Ops)
-	dims := layout.Inset{Top: 25, Bottom: 25}.Layout(gtx, func(gtx C) D {
+	dims := layout.Inset{Top: 25, Right: 10, Bottom: 25, Left: 10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				gtx.Constraints.Max.X = 48
@@ -286,7 +286,7 @@ func (ib *iconBrowser) runSearch() {
 		resp.indices = make([]int, 0, len(allEntries)/2)
 		for i := range allEntries {
 			e := &allEntries[i]
-			if strings.Contains(e.key, input) {
+			if strings.Contains(e.key, input) || strings.Contains(strings.ToLower(e.name), input) {
 				resp.indices = append(resp.indices, i)
 			}
 		}
