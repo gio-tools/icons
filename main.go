@@ -143,11 +143,17 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) {
 		layout.S.Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min.X = 0
 			return layout.Inset{Bottom: 20}.Layout(gtx, func(gtx C) D {
-				lbl := material.Body2(th, ib.copyNotif.msg)
+				lbl := material.Body1(th, ib.copyNotif.msg)
 				lbl.Alignment = text.Middle
 				lbl.Color = color.NRGBA{255, 255, 255, 255}
+				lbl.Font.Weight = text.SemiBold
 				m := op.Record(gtx.Ops)
-				dims := layout.Inset{Top: 20, Right: 25, Bottom: 20, Left: 25}.Layout(gtx, lbl.Layout)
+				dims := layout.Inset{Top: 20, Right: 25, Bottom: 20, Left: 25}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(lbl.Layout),
+						layout.Rigid(material.Body1(th, "  copied!").Layout),
+					)
+				})
 				call := m.Stop()
 				paint.FillShape(gtx.Ops, color.NRGBA{4, 222, 113, 255}, clip.RRect{
 					NW: 6, NE: 6, SE: 6, SW: 6,
@@ -221,7 +227,7 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 		varPath := fmt.Sprintf("icons.%s", en.varName)
 		ib.win.WriteClipboard(varPath)
 		ib.copyNotif = copyNotif{
-			msg: fmt.Sprintf("%q copied!", varPath),
+			msg: varPath,
 			at:  time.Now(),
 		}
 		op.InvalidateOp{}.Add(gtx.Ops)
