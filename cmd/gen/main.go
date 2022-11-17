@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fatih/camelcase"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -66,7 +67,8 @@ func main() {
 		log.Fatalf("writing source header: %v", err)
 	}
 	for _, name := range names {
-		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s), _g0},\n", name, strings.ToLower(name), name, name)
+		nameWithSpaces := strings.Join(camelcase.Split(name), " ")
+		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s), _g0},\n", nameWithSpaces, strings.ToLower(name), name, name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)
