@@ -23,7 +23,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/steverusso/giofonts/sourcesanspro"
+	"github.com/steverusso/gio-fonts/sourcesanspro"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
