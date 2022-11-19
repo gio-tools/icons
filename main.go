@@ -32,15 +32,28 @@ type (
 	D = layout.Dimensions
 )
 
+const copyNotifDuration = time.Second * 3
+
 // CLI flags.
 var (
 	printFrameTimes  bool
 	printSearchTimes bool
 )
 
-const copyNotifDuration = time.Second * 3
-
 var iconSearch = mi(icons.ActionSearch)
+
+var (
+	allIndices  []int
+	entryClicks []gesture.Click
+)
+
+func init() {
+	allIndices = make([]int, len(allEntries))
+	for i := 0; i < len(allIndices); i++ {
+		allIndices[i] = i
+	}
+	entryClicks = make([]gesture.Click, len(allEntries))
+}
 
 type iconEntry struct {
 	name    string
