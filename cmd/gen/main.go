@@ -19,16 +19,18 @@ import (
 	. "golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-var allIndices []int
+var (
+	allIndices  []int
+	entryClicks []gesture.Click
+)
 
 func init() {
 	allIndices = make([]int, len(allEntries))
 	for i := 0; i < len(allIndices); i++ {
 		allIndices[i] = i
 	}
+	entryClicks = make([]gesture.Click, len(allEntries))
 }
-
-var _g0 = gesture.Click{}
 
 var allEntries = [...]iconEntry{
 `
@@ -68,7 +70,7 @@ func main() {
 	}
 	for _, name := range names {
 		nameWithSpaces := strings.Join(camelcase.Split(name), " ")
-		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s), _g0},\n", nameWithSpaces, strings.ToLower(name), name, name)
+		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s)},\n", nameWithSpaces, strings.ToLower(name), name, name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)

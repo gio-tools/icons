@@ -47,7 +47,6 @@ type iconEntry struct {
 	key     string // The name but all lowercase for search matching.
 	varName string
 	icon    *widget.Icon
-	click   gesture.Click
 }
 
 // mi (stands for `must icon`) returns a new `*widget.Icon` for the given byte
@@ -174,9 +173,9 @@ func (ib *iconBrowser) layResults(gtx C, th *material.Theme, indices []int) D {
 				cells = append(cells, layout.Flexed(weight, emptyWidget))
 				continue
 			}
-			entry := &allEntries[indices[indexIndex]]
+			entryIndex := indices[indexIndex]
 			cells = append(cells, layout.Flexed(weight, func(gtx C) D {
-				return ib.layEntry(gtx, th, entry)
+				return ib.layEntry(gtx, th, entryIndex)
 			}))
 		}
 		rows = append(rows, func(gtx C) D {
@@ -188,9 +187,11 @@ func (ib *iconBrowser) layResults(gtx C, th *material.Theme, indices []int) D {
 	})
 }
 
-func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
+func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, index int) D {
+	en := &allEntries[index]
+	click := &entryClicks[index]
 	var clicked bool
-	for _, e := range en.click.Events(gtx) {
+	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			clicked = true
 		}
@@ -212,7 +213,7 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 	switch {
 	case clicked:
 		bg = color.NRGBA{0, 0, 0, 255}
-	case en.click.Hovered():
+	case click.Hovered():
 		bg = color.NRGBA{50, 50, 50, 255}
 	}
 	nameLbl := material.Body2(th, en.name)
@@ -232,7 +233,7 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 	call := m.Stop()
 	paint.FillShape(gtx.Ops, bg, clip.Rect{Max: dims.Size}.Op())
 	defer clip.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-	en.click.Add(gtx.Ops)
+	click.Add(gtx.Ops)
 	call.Add(gtx.Ops)
 	return dims
 }
