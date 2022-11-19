@@ -77,11 +77,6 @@ type searchResponse struct {
 	seq     int
 }
 
-type copyNotif struct {
-	msg string
-	at  time.Time
-}
-
 func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 	if e.State != key.Press {
 		return
@@ -144,31 +139,7 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) {
 		layout.S.Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min.X = 0
 			return layout.Inset{Bottom: 20}.Layout(gtx, func(gtx C) D {
-				lbl := material.Body1(th, ib.copyNotif.msg)
-				lbl.Alignment = text.Middle
-				lbl.Color = color.NRGBA{255, 255, 255, 255}
-				lbl.Font.Weight = text.SemiBold
-				m := op.Record(gtx.Ops)
-				dims := layout.Inset{Top: 20, Right: 25, Bottom: 20, Left: 25}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(lbl.Layout),
-						layout.Rigid(material.Body1(th, "  copied!").Layout),
-					)
-				})
-				call := m.Stop()
-				paint.FillShape(gtx.Ops, color.NRGBA{4, 222, 113, 255}, clip.RRect{
-					NW: 6, NE: 6, SE: 6, SW: 6,
-					Rect: image.Rectangle{
-						Min: image.Point{-2, -2},
-						Max: image.Point{dims.Size.X + 2, dims.Size.Y + 2},
-					},
-				}.Op(gtx.Ops))
-				paint.FillShape(gtx.Ops, color.NRGBA{20, 140, 49, 255}, clip.RRect{
-					NW: 5, NE: 5, SE: 5, SW: 5,
-					Rect: image.Rectangle{Max: dims.Size},
-				}.Op(gtx.Ops))
-				call.Add(gtx.Ops)
-				return dims
+				return ib.copyNotif.layout(gtx, th)
 			})
 		})
 	}
@@ -292,6 +263,39 @@ func (ib *iconBrowser) runSearch() {
 			}
 		}
 	}()
+}
+
+type copyNotif struct {
+	msg string
+	at  time.Time
+}
+
+func (n *copyNotif) layout(gtx C, th *material.Theme) D {
+	lbl := material.Body1(th, n.msg)
+	lbl.Alignment = text.Middle
+	lbl.Color = color.NRGBA{255, 255, 255, 255}
+	lbl.Font.Weight = text.SemiBold
+	m := op.Record(gtx.Ops)
+	dims := layout.Inset{Top: 20, Right: 25, Bottom: 20, Left: 25}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(lbl.Layout),
+			layout.Rigid(material.Body1(th, "  copied!").Layout),
+		)
+	})
+	call := m.Stop()
+	paint.FillShape(gtx.Ops, color.NRGBA{4, 222, 113, 255}, clip.RRect{
+		NW: 6, NE: 6, SE: 6, SW: 6,
+		Rect: image.Rectangle{
+			Min: image.Point{-2, -2},
+			Max: image.Point{dims.Size.X + 2, dims.Size.Y + 2},
+		},
+	}.Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, color.NRGBA{20, 140, 49, 255}, clip.RRect{
+		NW: 5, NE: 5, SE: 5, SW: 5,
+		Rect: image.Rectangle{Max: dims.Size},
+	}.Op(gtx.Ops))
+	call.Add(gtx.Ops)
+	return dims
 }
 
 type rule struct {
