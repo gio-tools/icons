@@ -67,6 +67,7 @@ type iconBrowser struct {
 	searchCurSeq    int
 	searchInput     widget.Editor
 	resultList      widget.List
+	iconSize        int
 	matchedIndices  []int
 	copyNotif       copyNotif
 }
@@ -249,8 +250,8 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, en *iconEntry) D {
 	dims := layout.Inset{Top: 25, Right: 10, Bottom: 25, Left: 10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Max.X = 48
-				gtx.Constraints.Max.Y = 48
+				gtx.Constraints.Max.X = ib.iconSize
+				gtx.Constraints.Max.Y = ib.iconSize
 				return en.icon.Layout(gtx, color.NRGBA{210, 210, 210, 255})
 			}),
 			layout.Rigid(layout.Spacer{Height: 10}.Layout),
@@ -341,6 +342,7 @@ func run() error {
 		searchResponses: make(chan searchResponse),
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
 		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
+		iconSize:        48,
 	}
 
 	var ops op.Ops
