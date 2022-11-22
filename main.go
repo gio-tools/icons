@@ -75,6 +75,7 @@ func mi(data []byte) *widget.Icon {
 
 type iconBrowser struct {
 	win             *app.Window
+	th              *material.Theme
 	searchResponses chan searchResponse
 	searchCurSeq    int
 	searchInput     widget.Editor
@@ -124,7 +125,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 	}
 }
 
-func (ib *iconBrowser) layout(gtx C, th *material.Theme) {
+func (ib *iconBrowser) layout(gtx C) {
 	for _, e := range ib.searchInput.Events() {
 		if _, ok := e.(widget.ChangeEvent); ok {
 			ib.runSearch()
@@ -134,14 +135,14 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) {
 	if ib.matchedIndices == nil {
 		ib.matchedIndices = allIndices
 	}
-	paint.Fill(gtx.Ops, th.Bg)
+	paint.Fill(gtx.Ops, ib.th.Bg)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return ib.layHeader(gtx, th, len(ib.matchedIndices))
+			return ib.layHeader(gtx, len(ib.matchedIndices))
 		}),
-		layout.Rigid(rule{color: th.Fg}.layout),
+		layout.Rigid(rule{color: ib.th.Fg}.layout),
 		layout.Flexed(1, func(gtx C) D {
-			return ib.layResults(gtx, th, ib.matchedIndices)
+			return ib.layResults(gtx, ib.matchedIndices)
 		}),
 	)
 	if time.Now().Sub(ib.copyNotif.at) > copyNotifDuration {
@@ -151,21 +152,21 @@ func (ib *iconBrowser) layout(gtx C, th *material.Theme) {
 		layout.S.Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min.X = 0
 			return layout.Inset{Bottom: 20}.Layout(gtx, func(gtx C) D {
-				return ib.copyNotif.layout(gtx, th)
+				return ib.copyNotif.layout(gtx, ib.th)
 			})
 		})
 	}
 }
 
-func (ib *iconBrowser) layHeader(gtx C, th *material.Theme, n int) D {
-	searchEd := material.Editor(th, &ib.searchInput, "Search...")
-	numLbl := material.Body2(th, fmt.Sprintf("%d", n))
+func (ib *iconBrowser) layHeader(gtx C, n int) D {
+	searchEd := material.Editor(ib.th, &ib.searchInput, "Search...")
+	numLbl := material.Body2(ib.th, fmt.Sprintf("%d", n))
 	numLbl.Font.Weight = text.Bold
-	iconsLbl := material.Caption(th, " icons")
+	iconsLbl := material.Caption(ib.th, " icons")
 	return layout.UniformInset(16).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return iconSearch.Layout(gtx, th.Fg)
+				return iconSearch.Layout(gtx, ib.th.Fg)
 			}),
 			layout.Rigid(layout.Spacer{Width: 16}.Layout),
 			layout.Flexed(1, searchEd.Layout),
@@ -175,7 +176,7 @@ func (ib *iconBrowser) layHeader(gtx C, th *material.Theme, n int) D {
 	})
 }
 
-func (ib *iconBrowser) layResults(gtx C, th *material.Theme, indices []int) D {
+func (ib *iconBrowser) layResults(gtx C, indices []int) D {
 	const weight = 1.0 / 3.0
 	var rows []layout.Widget
 	for i := 0; i < len(indices); i += 3 {
@@ -188,19 +189,19 @@ func (ib *iconBrowser) layResults(gtx C, th *material.Theme, indices []int) D {
 			}
 			entryIndex := indices[indexIndex]
 			cells = append(cells, layout.Flexed(weight, func(gtx C) D {
-				return ib.layEntry(gtx, th, entryIndex)
+				return ib.layEntry(gtx, entryIndex)
 			}))
 		}
 		rows = append(rows, func(gtx C) D {
 			return layout.Flex{}.Layout(gtx, cells...)
 		})
 	}
-	return material.List(th, &ib.resultList).Layout(gtx, len(rows), func(gtx C, i int) D {
+	return material.List(ib.th, &ib.resultList).Layout(gtx, len(rows), func(gtx C, i int) D {
 		return rows[i](gtx)
 	})
 }
 
-func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, index int) D {
+func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	en := &allEntries[index]
 	click := &entryClicks[index]
 	var clicked bool
@@ -229,7 +230,7 @@ func (ib *iconBrowser) layEntry(gtx C, th *material.Theme, index int) D {
 	case click.Hovered():
 		bg = color.NRGBA{50, 50, 50, 255}
 	}
-	nameLbl := material.Body2(th, en.name)
+	nameLbl := material.Body2(ib.th, en.name)
 	nameLbl.Alignment = text.Middle
 	m := op.Record(gtx.Ops)
 	dims := layout.Inset{Top: 25, Right: 10, Bottom: 25, Left: 10}.Layout(gtx, func(gtx C) D {
@@ -357,6 +358,7 @@ func run() error {
 
 	ib := iconBrowser{
 		win:             win,
+		th:              th,
 		searchResponses: make(chan searchResponse),
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
 		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
@@ -386,7 +388,7 @@ func run() error {
 				// Gather key input on the entire window area.
 				areaStack := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops)
 				key.InputOp{Tag: ib.win, Keys: topLevelKeySet}.Add(gtx.Ops)
-				ib.layout(gtx, th)
+				ib.layout(gtx)
 				areaStack.Pop()
 				e.Frame(gtx.Ops)
 				if printFrameTimes {
