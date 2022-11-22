@@ -30,8 +30,8 @@ const copyNotifDuration = time.Second * 3
 
 // CLI flags.
 var (
-	printFrameTimes  bool
-	printSearchTimes bool
+	printFrameTimes  = flag.Bool("print-frame-times", false, "Print out how long each frame takes.")
+	printSearchTimes = flag.Bool("print-search-times", false, "Print out how long each search run takes.")
 )
 
 var (
@@ -239,7 +239,7 @@ func (ib *iconBrowser) runSearch() {
 		start := time.Now()
 		defer func() {
 			ib.searchResponses <- resp
-			if printSearchTimes {
+			if *printSearchTimes {
 				log.Println(time.Now().Sub(start))
 			}
 		}()
@@ -314,7 +314,7 @@ func run() error {
 				ib.layout(gtx)
 				areaStack.Pop()
 				e.Frame(gtx.Ops)
-				if printFrameTimes {
+				if *printFrameTimes {
 					log.Println(time.Now().Sub(start))
 				}
 			case system.DestroyEvent:
@@ -325,8 +325,6 @@ func run() error {
 }
 
 func main() {
-	flag.BoolVar(&printFrameTimes, "print-frame-times", false, "Print out how long each frame takes.")
-	flag.BoolVar(&printSearchTimes, "print-search-times", false, "Print out how long each search run takes.")
 	flag.Parse()
 
 	go func() {
