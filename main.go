@@ -137,13 +137,9 @@ func (ib *iconBrowser) layout(gtx C) {
 	}
 	paint.Fill(gtx.Ops, ib.th.Bg)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return ib.layHeader(gtx, len(ib.matchedIndices))
-		}),
+		layout.Rigid(ib.layHeader),
 		layout.Rigid(rule{color: ib.th.Fg}.layout),
-		layout.Flexed(1, func(gtx C) D {
-			return ib.layResults(gtx, ib.matchedIndices)
-		}),
+		layout.Flexed(1, ib.layResults),
 	)
 	if time.Now().Sub(ib.copyNotif.at) > copyNotifDuration {
 		ib.copyNotif = copyNotif{}
@@ -158,9 +154,9 @@ func (ib *iconBrowser) layout(gtx C) {
 	}
 }
 
-func (ib *iconBrowser) layHeader(gtx C, n int) D {
+func (ib *iconBrowser) layHeader(gtx C) D {
 	searchEd := material.Editor(ib.th, &ib.searchInput, "Search...")
-	numLbl := material.Body2(ib.th, fmt.Sprintf("%d", n))
+	numLbl := material.Body2(ib.th, fmt.Sprintf("%d", len(ib.matchedIndices)))
 	numLbl.Font.Weight = text.Bold
 	iconsLbl := material.Caption(ib.th, " icons")
 	return layout.UniformInset(16).Layout(gtx, func(gtx C) D {
@@ -176,18 +172,18 @@ func (ib *iconBrowser) layHeader(gtx C, n int) D {
 	})
 }
 
-func (ib *iconBrowser) layResults(gtx C, indices []int) D {
+func (ib *iconBrowser) layResults(gtx C) D {
 	const weight = 1.0 / 3.0
 	var rows []layout.Widget
-	for i := 0; i < len(indices); i += 3 {
+	for i := 0; i < len(ib.matchedIndices); i += 3 {
 		var cells []layout.FlexChild
 		for n := 0; n < 3; n++ {
 			indexIndex := i + n
-			if indexIndex >= len(indices) {
+			if indexIndex >= len(ib.matchedIndices) {
 				cells = append(cells, layout.Flexed(weight, emptyWidget))
 				continue
 			}
-			entryIndex := indices[indexIndex]
+			entryIndex := ib.matchedIndices[indexIndex]
 			cells = append(cells, layout.Flexed(weight, func(gtx C) D {
 				return ib.layEntry(gtx, entryIndex)
 			}))
@@ -343,7 +339,7 @@ const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
 func run() error {
 	win := app.NewWindow(
 		app.Size(900, 800),
-		app.Title("GioUI Icon Browser"),
+		app.Title("Gio Icon Browser"),
 	)
 	win.Perform(system.ActionCenter)
 
