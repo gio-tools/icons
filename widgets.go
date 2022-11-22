@@ -20,12 +20,14 @@ type (
 	D = layout.Dimensions
 )
 
-var iconSearch = mi(icons.ActionSearch)
+var iconSearch = mustIcon(icons.ActionSearch)
 
-// mi (stands for `must icon`) returns a new `*widget.Icon` for the given byte
-// slice or panics on error. It's primarily used within `data.go` and
-// abbreviating the name like this reduces that file size by about 6kb.
-func mi(data []byte) *widget.Icon {
+// The function `mustIcon` is primarily used as part of each icon entry within
+// `data.go`. Shortening the name to `mi` reduces that file size by about 6kb.
+var mi = mustIcon
+
+// mustIcon returns a new `*widget.Icon` for the given byte slice or panics on error.
+func mustIcon(data []byte) *widget.Icon {
 	ic, err := widget.NewIcon(data)
 	if err != nil {
 		panic(err)
