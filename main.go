@@ -4,7 +4,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -175,7 +174,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 		}
 	}
 	if clicked {
-		varPath := fmt.Sprintf("icons.%s", en.varName)
+		varPath := "icons." + en.varName
 		ib.win.WriteClipboard(varPath)
 		ib.copyNotif = copyNotif{
 			msg: varPath,
