@@ -15,8 +15,20 @@ const srcHeader = `// This is generated code. DO NOT EDIT
 package main
 
 import (
+	"gioui.org/gesture"
 	. "golang.org/x/exp/shiny/materialdesign/icons"
 )
+
+var (
+	allIndices  [%d]int
+	entryClicks [%d]gesture.Click
+)
+
+func init() {
+	for i := 0; i < len(allIndices); i++ {
+		allIndices[i] = i
+	}
+}
 
 var allEntries = [...]iconEntry{
 `
@@ -51,7 +63,9 @@ func main() {
 		log.Fatalf("opening out file: %v", err)
 	}
 	defer out.Close()
-	if _, err = out.WriteString(srcHeader); err != nil {
+
+	count := len(names)
+	if _, err = fmt.Fprintf(out, srcHeader, count, count); err != nil {
 		log.Fatalf("writing source header: %v", err)
 	}
 	for _, name := range names {

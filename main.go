@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,21 +32,8 @@ const copyNotifDuration = time.Second * 3
 // CLI flags.
 var (
 	printFrameTimes  = flag.Bool("print-frame-times", false, "Print out how long each frame takes.")
-	printSearchTimes = flag.Bool("print-search-times", false, "Print out how long each search run takes.")
+	printSearchTimes = flag.Bool("print-search-times", false, "Print out how long each search takes.")
 )
-
-var (
-	allIndices  []int
-	entryClicks []gesture.Click
-)
-
-func init() {
-	allIndices = make([]int, len(allEntries))
-	for i := 0; i < len(allIndices); i++ {
-		allIndices[i] = i
-	}
-	entryClicks = make([]gesture.Click, len(allEntries))
-}
 
 type iconEntry struct {
 	name    string
@@ -114,7 +102,7 @@ func (ib *iconBrowser) layout(gtx C) {
 		}
 	}
 	if ib.matchedIndices == nil {
-		ib.matchedIndices = allIndices
+		ib.matchedIndices = allIndices[:]
 	}
 	paint.Fill(gtx.Ops, ib.th.Bg)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -137,9 +125,8 @@ func (ib *iconBrowser) layout(gtx C) {
 
 func (ib *iconBrowser) layHeader(gtx C) D {
 	searchEd := material.Editor(ib.th, &ib.searchInput, "Search...")
-	numLbl := material.Body2(ib.th, fmt.Sprintf("%d", len(ib.matchedIndices)))
+	numLbl := material.Body2(ib.th, strconv.Itoa(len(ib.matchedIndices)))
 	numLbl.Font.Weight = text.Bold
-	iconsLbl := material.Caption(ib.th, " icons")
 	return layout.UniformInset(16).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -148,7 +135,7 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 			layout.Rigid(layout.Spacer{Width: 16}.Layout),
 			layout.Flexed(1, searchEd.Layout),
 			layout.Rigid(numLbl.Layout),
-			layout.Rigid(iconsLbl.Layout),
+			layout.Rigid(material.Caption(ib.th, " icons").Layout),
 		)
 	})
 }
