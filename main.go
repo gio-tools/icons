@@ -102,8 +102,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 				key.FocusOp{Tag: nil}.Add(gtx.Ops)
 			}
 		case key.NameHome:
-			ib.resultList.List.Position.First = 0
-			ib.resultList.List.Position.Offset = 0
+			ib.scrollResultListTop()
 		case key.NameEnd:
 			// The number of results plus one will always be greater than the number
 			// of children managed by the list (even if it were a single column),
@@ -111,6 +110,11 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 			ib.resultList.List.Position.First = len(ib.matchedIndices) + 1
 		}
 	}
+}
+
+func (ib *iconBrowser) scrollResultListTop() {
+	ib.resultList.List.Position.First = 0
+	ib.resultList.List.Position.Offset = 0
 }
 
 func (ib *iconBrowser) layout(gtx C) {
@@ -321,6 +325,7 @@ func run() error {
 			if r.seq == ib.searchCurSeq {
 				ib.matchedIndices = r.indices
 				ib.searchCurSeq = 0
+				ib.scrollResultListTop()
 			}
 			ib.win.Invalidate()
 		case e := <-ib.win.Events():
