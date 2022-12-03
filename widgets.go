@@ -27,12 +27,12 @@ var iconSearch = mustIcon(icons.ActionSearch)
 var mi = mustIcon
 
 // mustIcon returns a new `*widget.Icon` for the given byte slice or panics on error.
-func mustIcon(data []byte) *widget.Icon {
+func mustIcon(data []byte) widget.Icon {
 	ic, err := widget.NewIcon(data)
 	if err != nil {
 		panic(err)
 	}
-	return ic
+	return *ic
 }
 
 type copyNotif struct {

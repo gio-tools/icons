@@ -52,7 +52,7 @@ type iconEntry struct {
 	name    string
 	key     string // The name but all lowercase for search matching.
 	varName string
-	icon    *widget.Icon
+	icon    widget.Icon
 }
 
 type iconBrowser struct {
