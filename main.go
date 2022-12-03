@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"gioui.org/app"
+	"gioui.org/font/opentype"
 	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -23,7 +24,8 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/steverusso/gio-fonts/sourcesanspro"
+	"github.com/steverusso/gio-fonts/vegur/vegurbold"
+	"github.com/steverusso/gio-fonts/vegur/vegurregular"
 )
 
 const copyNotifDuration = time.Second * 3
@@ -243,6 +245,14 @@ func (ib *iconBrowser) runSearch() {
 	}()
 }
 
+func mustFace(data []byte) text.Face {
+	face, err := opentype.Parse(data)
+	if err != nil {
+		panic("failed to parse font: " + err.Error())
+	}
+	return face
+}
+
 const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
 	"|/" +
 	"|" + key.NameEscape +
@@ -256,8 +266,11 @@ func run() error {
 	)
 	win.Perform(system.ActionCenter)
 
-	th := material.NewTheme(sourcesanspro.Collection())
-	th.TextSize = 17
+	th := material.NewTheme([]text.FontFace{
+		{Font: text.Font{Typeface: "Vegur"}, Face: mustFace(vegurregular.OTF)},
+		{Font: text.Font{Typeface: "Vegur", Weight: text.Bold}, Face: mustFace(vegurbold.OTF)},
+	})
+	th.TextSize = 18
 	th.Palette = material.Palette{
 		Bg:         color.NRGBA{15, 15, 15, 255},
 		Fg:         color.NRGBA{230, 230, 230, 255},
