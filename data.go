@@ -2,22 +2,12 @@
 package main
 
 import (
-	"gioui.org/gesture"
 	. "golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-var (
-	allIndices  [961]int
-	entryClicks [961]gesture.Click
-)
+const numEntries = 961
 
-func init() {
-	for i := 0; i < len(allIndices); i++ {
-		allIndices[i] = i
-	}
-}
-
-var allEntries = [...]iconEntry{
+var allEntries = [961]iconEntry{
 	{"AVAV Timer", "avavtimer", "AVAVTimer", mi(AVAVTimer)},
 	{"AV Add To Queue", "avaddtoqueue", "AVAddToQueue", mi(AVAddToQueue)},
 	{"AV Airplay", "avairplay", "AVAirplay", mi(AVAirplay)},

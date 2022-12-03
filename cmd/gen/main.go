@@ -15,22 +15,12 @@ const srcHeader = `// This is generated code. DO NOT EDIT
 package main
 
 import (
-	"gioui.org/gesture"
 	. "golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-var (
-	allIndices  [%d]int
-	entryClicks [%d]gesture.Click
-)
+const numEntries = %d
 
-func init() {
-	for i := 0; i < len(allIndices); i++ {
-		allIndices[i] = i
-	}
-}
-
-var allEntries = [...]iconEntry{
+var allEntries = [%d]iconEntry{
 `
 
 func readAndSortNames() ([]string, error) {

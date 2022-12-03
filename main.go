@@ -36,6 +36,17 @@ var (
 	printSearchTimes = flag.Bool("print-search-times", false, "Print out how long each search takes.")
 )
 
+var (
+	allIndices  [numEntries]int
+	entryClicks [numEntries]gesture.Click
+)
+
+func init() {
+	for i := 0; i < numEntries; i++ {
+		allIndices[i] = i
+	}
+}
+
 type iconEntry struct {
 	name    string
 	key     string // The name but all lowercase for search matching.
