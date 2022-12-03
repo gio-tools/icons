@@ -22,6 +22,7 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/steverusso/gio-fonts/vegur/vegurbold"
@@ -55,8 +56,9 @@ type iconEntry struct {
 }
 
 type iconBrowser struct {
-	win             *app.Window
-	th              *material.Theme
+	win *app.Window
+	th  *material.Theme
+
 	searchResponses chan searchResponse
 	searchCurSeq    int
 	searchInput     widget.Editor
@@ -64,6 +66,11 @@ type iconBrowser struct {
 	iconSize        int
 	matchedIndices  []int
 	copyNotif       copyNotif
+
+	maxWidth   int
+	entryWidth int
+	numPerRow  int
+	flexWeight float32
 }
 
 type searchResponse struct {
@@ -116,6 +123,7 @@ func (ib *iconBrowser) layout(gtx C) {
 	if ib.matchedIndices == nil {
 		ib.matchedIndices = allIndices[:]
 	}
+	ib.ensure(gtx)
 	paint.Fill(gtx.Ops, ib.th.Bg)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(ib.layHeader),
@@ -132,6 +140,15 @@ func (ib *iconBrowser) layout(gtx C) {
 				return ib.copyNotif.layout(gtx, ib.th)
 			})
 		})
+	}
+}
+
+func (ib *iconBrowser) ensure(gtx C) {
+	if ib.maxWidth != gtx.Constraints.Max.X {
+		ib.maxWidth = gtx.Constraints.Max.X
+		ib.entryWidth = ib.iconSize * 4
+		ib.numPerRow = ib.maxWidth / ib.entryWidth
+		ib.flexWeight = 1.0 / float32(ib.numPerRow)
 	}
 }
 
@@ -153,27 +170,25 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 }
 
 func (ib *iconBrowser) layResults(gtx C) D {
-	const weight = 1.0 / 3.0
-	var rows []layout.Widget
-	for i := 0; i < len(ib.matchedIndices); i += 3 {
-		var cells []layout.FlexChild
-		for n := 0; n < 3; n++ {
-			indexIndex := i + n
-			if indexIndex >= len(ib.matchedIndices) {
-				cells = append(cells, layout.Flexed(weight, emptyWidget))
+	numRows := len(ib.matchedIndices) / ib.numPerRow
+	if len(ib.matchedIndices)%ib.numPerRow != 0 {
+		numRows++
+	}
+	return material.List(ib.th, &ib.resultList).Layout(gtx, numRows, func(gtx C, i int) D {
+		cells := make([]layout.FlexChild, 0, ib.numPerRow)
+		first := i * ib.numPerRow
+		last := first + ib.numPerRow
+		for n := first; n < last; n++ {
+			if n >= len(ib.matchedIndices) {
+				cells = append(cells, layout.Flexed(ib.flexWeight, layout.Spacer{Width: unit.Dp(ib.entryWidth)}.Layout))
 				continue
 			}
-			entryIndex := ib.matchedIndices[indexIndex]
-			cells = append(cells, layout.Flexed(weight, func(gtx C) D {
+			entryIndex := ib.matchedIndices[n]
+			cells = append(cells, layout.Flexed(ib.flexWeight, func(gtx C) D {
 				return ib.layEntry(gtx, entryIndex)
 			}))
 		}
-		rows = append(rows, func(gtx C) D {
-			return layout.Flex{}.Layout(gtx, cells...)
-		})
-	}
-	return material.List(ib.th, &ib.resultList).Layout(gtx, len(rows), func(gtx C, i int) D {
-		return rows[i](gtx)
+		return layout.Flex{Spacing: layout.SpaceEvenly}.Layout(gtx, cells...)
 	})
 }
 
@@ -206,6 +221,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	case click.Hovered():
 		bg = color.NRGBA{50, 50, 50, 255}
 	}
+	gtx.Constraints.Max.X = ib.iconSize * 4
 	nameLbl := material.Body2(ib.th, en.name)
 	nameLbl.Alignment = text.Middle
 	m := op.Record(gtx.Ops)
@@ -246,7 +262,7 @@ func (ib *iconBrowser) runSearch() {
 		if input == "" {
 			return
 		}
-		resp.indices = make([]int, 0, len(allEntries)/2)
+		resp.indices = make([]int, 0, len(allEntries)/3)
 		for i := range allEntries {
 			e := &allEntries[i]
 			if strings.Contains(e.key, input) || strings.Contains(strings.ToLower(e.name), input) {
