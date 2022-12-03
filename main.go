@@ -63,10 +63,11 @@ type iconBrowser struct {
 	searchCurSeq    int
 	searchInput     widget.Editor
 	resultList      widget.List
-	iconSize        int
 	matchedIndices  []int
 	copyNotif       copyNotif
 
+	textSize   unit.Sp
+	iconSize   int
 	maxWidth   int
 	entryWidth int
 	numPerRow  int
@@ -148,9 +149,11 @@ func (ib *iconBrowser) layout(gtx C) {
 }
 
 func (ib *iconBrowser) ensure(gtx C) {
-	if ib.maxWidth != gtx.Constraints.Max.X {
-		ib.maxWidth = gtx.Constraints.Max.X
+	if ib.textSize != ib.th.TextSize || ib.maxWidth != gtx.Constraints.Max.X {
+		ib.textSize = ib.th.TextSize
+		ib.iconSize = int(ib.textSize * 2.67)
 		ib.entryWidth = ib.iconSize * 4
+		ib.maxWidth = gtx.Constraints.Max.X
 		ib.numPerRow = ib.maxWidth / ib.entryWidth
 		ib.flexWeight = 1.0 / float32(ib.numPerRow)
 	}
@@ -225,7 +228,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	case click.Hovered():
 		bg = color.NRGBA{50, 50, 50, 255}
 	}
-	gtx.Constraints.Max.X = ib.iconSize * 4
+	gtx.Constraints.Max.X = ib.entryWidth
 	nameLbl := material.Body2(ib.th, en.name)
 	nameLbl.Alignment = text.Middle
 	m := op.Record(gtx.Ops)
@@ -315,7 +318,6 @@ func run() error {
 		searchResponses: make(chan searchResponse),
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
 		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
-		iconSize:        48,
 	}
 
 	var ops op.Ops
