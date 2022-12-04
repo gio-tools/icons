@@ -315,7 +315,6 @@ func run() error {
 		app.Size(900, 800),
 		app.Title("Gio Icon Browser"),
 	)
-	win.Perform(system.ActionCenter)
 
 	th := material.NewTheme([]text.FontFace{
 		{Font: text.Font{Typeface: "Vegur"}, Face: mustFace(vegurregular.OTF)},
