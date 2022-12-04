@@ -193,20 +193,22 @@ func (ib *iconBrowser) layResults(gtx C) D {
 		numRows++
 	}
 	return material.List(ib.th, &ib.resultList).Layout(gtx, numRows, func(gtx C, i int) D {
-		cells := make([]layout.FlexChild, 0, ib.numPerRow)
 		first := i * ib.numPerRow
-		last := first + ib.numPerRow
-		for n := first; n < last; n++ {
-			if n >= len(ib.matchedIndices) {
-				cells = append(cells, layout.Flexed(ib.flexWeight, layout.Spacer{Width: unit.Dp(ib.entryWidth)}.Layout))
-				continue
+		w := gtx.Constraints.Max.X / ib.numPerRow
+		h := 0
+		for n := 0; n < ib.numPerRow; n++ {
+			idx := first + n
+			if idx >= len(ib.matchedIndices) {
+				break
 			}
-			entryIndex := ib.matchedIndices[n]
-			cells = append(cells, layout.Flexed(ib.flexWeight, func(gtx C) D {
-				return ib.layEntry(gtx, entryIndex)
-			}))
+			xOffsetOp := op.Offset(image.Point{X: n * w}).Push(gtx.Ops)
+			dims := ib.layEntry(gtx, ib.matchedIndices[idx])
+			if dims.Size.Y > h {
+				h = dims.Size.Y
+			}
+			xOffsetOp.Pop()
 		}
-		return layout.Flex{Spacing: layout.SpaceEvenly}.Layout(gtx, cells...)
+		return D{Size: image.Point{X: gtx.Constraints.Max.X, Y: h}}
 	})
 }
 
