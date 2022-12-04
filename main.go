@@ -109,6 +109,10 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 			if ib.searchInput.Focused() {
 				key.FocusOp{Tag: nil}.Add(gtx.Ops)
 			}
+		case key.NamePageUp:
+			ib.resultList.Position.First -= ib.resultList.Position.Count
+		case key.NamePageDown:
+			ib.resultList.Position.First += ib.resultList.Position.Count
 		case key.NameHome:
 			ib.scrollResultListTop()
 		case key.NameEnd:
@@ -307,6 +311,8 @@ const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
 	"|Ctrl-[[,]]" +
 	"|/" +
 	"|" + key.NameEscape +
+	"|" + key.NamePageUp +
+	"|" + key.NamePageDown +
 	"|" + key.NameHome +
 	"|" + key.NameEnd
 
