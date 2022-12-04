@@ -69,7 +69,6 @@ type iconBrowser struct {
 	textSize   unit.Sp
 	iconSize   int
 	maxWidth   int
-	entryWidth int
 	numPerRow  int
 	flexWeight float32
 }
@@ -160,9 +159,8 @@ func (ib *iconBrowser) ensure(gtx C) {
 	if ib.textSize != ib.th.TextSize || ib.maxWidth != gtx.Constraints.Max.X {
 		ib.textSize = ib.th.TextSize
 		ib.iconSize = int(ib.textSize * 2.67)
-		ib.entryWidth = ib.iconSize * 4
 		ib.maxWidth = gtx.Constraints.Max.X
-		ib.numPerRow = ib.maxWidth / ib.entryWidth
+		ib.numPerRow = ib.maxWidth / (ib.iconSize * 4)
 		if ib.numPerRow == 0 {
 			ib.numPerRow = 1
 		}
@@ -234,19 +232,13 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 			ib.win.Invalidate()
 		}()
 	}
-	var bg color.NRGBA
-	switch {
-	case clicked:
-		bg = color.NRGBA{0, 0, 0, 255}
-	case click.Hovered():
-		bg = color.NRGBA{50, 50, 50, 255}
-	}
-	gtx.Constraints.Max.X = ib.entryWidth
+	gtx.Constraints.Max.X /= ib.numPerRow
 	nameLbl := material.Body2(ib.th, en.name)
 	nameLbl.Alignment = text.Middle
-	m := op.Record(gtx.Ops)
-	dims := layout.Inset{Top: 25, Right: 10, Bottom: 25, Left: 10}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
+	return layout.UniformInset(10).Layout(gtx, func(gtx C) D {
+		m := op.Record(gtx.Ops)
+		dims := layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(layout.Spacer{Height: 15}.Layout),
 			layout.Rigid(func(gtx C) D {
 				gtx.Constraints.Max.X = ib.iconSize
 				gtx.Constraints.Max.Y = ib.iconSize
@@ -254,14 +246,25 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 			}),
 			layout.Rigid(layout.Spacer{Height: 10}.Layout),
 			layout.Rigid(nameLbl.Layout),
+			layout.Rigid(layout.Spacer{Height: 15}.Layout),
 		)
+		call := m.Stop()
+
+		rrOp := clip.UniformRRect(image.Rectangle{Max: dims.Size}, 6).Push(gtx.Ops)
+		if click.Hovered() && !clicked {
+			paint.LinearGradientOp{
+				Stop1:  layout.FPt(image.Point{}),
+				Stop2:  layout.FPt(dims.Size),
+				Color1: color.NRGBA{32, 32, 32, 255},
+				Color2: color.NRGBA{65, 65, 65, 255},
+			}.Add(gtx.Ops)
+			paint.PaintOp{}.Add(gtx.Ops)
+		}
+		defer rrOp.Pop()
+		click.Add(gtx.Ops)
+		call.Add(gtx.Ops)
+		return dims
 	})
-	call := m.Stop()
-	paint.FillShape(gtx.Ops, bg, clip.Rect{Max: dims.Size}.Op())
-	defer clip.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-	click.Add(gtx.Ops)
-	call.Add(gtx.Ops)
-	return dims
 }
 
 func (ib *iconBrowser) runSearch() {
