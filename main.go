@@ -86,6 +86,14 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 	switch e.Modifiers {
 	case key.ModCtrl:
 		switch e.Name {
+		case "[":
+			if ib.th.TextSize > 5 {
+				ib.th.TextSize -= 1
+			}
+		case "]":
+			if ib.th.TextSize < 65 {
+				ib.th.TextSize += 1
+			}
 		case "L", key.NameSpace:
 			ib.searchInput.Focus()
 		case "U":
@@ -155,6 +163,9 @@ func (ib *iconBrowser) ensure(gtx C) {
 		ib.entryWidth = ib.iconSize * 4
 		ib.maxWidth = gtx.Constraints.Max.X
 		ib.numPerRow = ib.maxWidth / ib.entryWidth
+		if ib.numPerRow == 0 {
+			ib.numPerRow = 1
+		}
 		ib.flexWeight = 1.0 / float32(ib.numPerRow)
 	}
 }
@@ -288,6 +299,7 @@ func mustFace(data []byte) text.Face {
 }
 
 const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
+	"|Ctrl-[[,]]" +
 	"|/" +
 	"|" + key.NameEscape +
 	"|" + key.NameHome +
