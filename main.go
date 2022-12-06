@@ -78,6 +78,31 @@ type searchResponse struct {
 	seq     int
 }
 
+func (ib *iconBrowser) frame(gtx C) {
+	const topLevelKeySet = "/" +
+		"|Ctrl-[L,U," + key.NameSpace + "]" +
+		"|Ctrl-[[,]]" +
+		"|" + key.NameEscape +
+		"|" + key.NameUpArrow +
+		"|" + key.NameDownArrow +
+		"|" + key.NamePageUp +
+		"|" + key.NamePageDown +
+		"|" + key.NameHome +
+		"|" + key.NameEnd
+
+	// Process any key events since the previous frame.
+	for _, ke := range gtx.Events(ib.win) {
+		if ke, ok := ke.(key.Event); ok {
+			ib.handleKeyEvent(gtx, ke)
+		}
+	}
+	// Gather key input on the entire window area.
+	areaStack := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops)
+	key.InputOp{Tag: ib.win, Keys: topLevelKeySet}.Add(gtx.Ops)
+	ib.layout(gtx)
+	areaStack.Pop()
+}
+
 func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 	if e.State != key.Press {
 		return
@@ -335,17 +360,6 @@ func mustFace(data []byte) text.Face {
 	return face
 }
 
-const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
-	"|Ctrl-[[,]]" +
-	"|/" +
-	"|" + key.NameEscape +
-	"|" + key.NameUpArrow +
-	"|" + key.NameDownArrow +
-	"|" + key.NamePageUp +
-	"|" + key.NamePageDown +
-	"|" + key.NameHome +
-	"|" + key.NameEnd
-
 func run() error {
 	win := app.NewWindow(
 		app.Size(980, 770),
@@ -387,17 +401,7 @@ func run() error {
 			case system.FrameEvent:
 				start := time.Now()
 				gtx := layout.NewContext(&ops, e)
-				// Process any key events since the previous frame.
-				for _, ke := range gtx.Events(ib.win) {
-					if ke, ok := ke.(key.Event); ok {
-						ib.handleKeyEvent(gtx, ke)
-					}
-				}
-				// Gather key input on the entire window area.
-				areaStack := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops)
-				key.InputOp{Tag: ib.win, Keys: topLevelKeySet}.Add(gtx.Ops)
-				ib.layout(gtx)
-				areaStack.Pop()
+				ib.frame(gtx)
 				e.Frame(gtx.Ops)
 				if *printFrameTimes {
 					log.Println(time.Now().Sub(start))
