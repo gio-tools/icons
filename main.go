@@ -342,7 +342,7 @@ const topLevelKeySet = "Ctrl-[L,U," + key.NameSpace + "]" +
 
 func run() error {
 	win := app.NewWindow(
-		app.Size(900, 800),
+		app.Size(980, 770),
 		app.Title("Gio Icon Browser"),
 	)
 
