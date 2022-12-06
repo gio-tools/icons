@@ -2,7 +2,7 @@
 default: build
 
 build: fmt lint
-	@go build -tags nowayland
+	@go build -ldflags="-s -w"
 
 fmt:
 	@goimports -w -l .
@@ -11,8 +11,5 @@ fmt:
 lint:
 	@go vet ./...
 
-release: fmt lint
-	@go build -ldflags="-s -w" --tags nowayland
-
-wayland: fmt lint
-	@go build
+nowayland: fmt lint
+	@go build -ldflags="-s -w" -tags nowayland

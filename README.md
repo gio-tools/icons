@@ -6,11 +6,12 @@ package, built with and for [Gio](https://gioui.org/).
 
 ## Development
 
-To build the app, run `go build --tags nowayland` (or just `go build` for Wayland).
+To build the app, run `go build` (or just `go build -tags nowayland` for no Wayland
+support).
 
 If you have [`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)
 and [`gofumpt`](https://github.com/mvdan/gofumpt) installed, you can simply run
-`make` or `make yeswayland` to fmt, lint and build the project.
+`make` (or `make nowayland`) to fmt, lint and build the project.
 
 ## Acknowledgements
 
