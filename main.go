@@ -236,39 +236,63 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 			ib.win.Invalidate()
 		}()
 	}
-	gtx.Constraints.Max.X /= ib.numPerRow
-	nameLbl := material.Body2(ib.th, en.name)
-	nameLbl.Alignment = text.Middle
-	return layout.UniformInset(10).Layout(gtx, func(gtx C) D {
-		m := op.Record(gtx.Ops)
-		dims := layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(layout.Spacer{Height: 15}.Layout),
-			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Max.X = ib.iconSize
-				gtx.Constraints.Max.Y = ib.iconSize
-				return en.icon.Layout(gtx, color.NRGBA{210, 210, 210, 255})
-			}),
-			layout.Rigid(layout.Spacer{Height: 10}.Layout),
-			layout.Rigid(nameLbl.Layout),
-			layout.Rigid(layout.Spacer{Height: 15}.Layout),
-		)
-		call := m.Stop()
+	const inset = 10   // The outer inset that serves as space between entries.
+	const spacing = 15 // The space before and after each inner element of an entry.
 
-		rrOp := clip.UniformRRect(image.Rectangle{Max: dims.Size}, 6).Push(gtx.Ops)
-		if click.Hovered() && !clicked {
-			paint.LinearGradientOp{
-				Stop1:  layout.FPt(image.Point{}),
-				Stop2:  layout.FPt(dims.Size),
-				Color1: color.NRGBA{32, 32, 32, 255},
-				Color2: color.NRGBA{65, 65, 65, 255},
-			}.Add(gtx.Ops)
-			paint.PaintOp{}.Add(gtx.Ops)
-		}
-		defer rrOp.Pop()
-		click.Add(gtx.Ops)
-		call.Add(gtx.Ops)
-		return dims
-	})
+	gtx.Constraints.Max.X /= ib.numPerRow
+	gtx.Constraints.Max.X -= inset * 2
+	insetOffOp := op.Offset(image.Point{inset, inset}).Push(gtx.Ops)
+
+	// We need to determine the entry's inner dimensions for two reasons: 1) to properly
+	// fill in the background if needed and 2) to know this entry's total height when we
+	// return the overall dimensions.
+	innerDims := D{Size: image.Point{
+		X: gtx.Constraints.Max.X,
+		Y: spacing,
+	}}
+	// Record the ops for drawing this entry so we can replay them after we fill in the
+	// background and add the click gesture.
+	m := op.Record(gtx.Ops)
+	{
+		// Draw the horizontally centered icon.
+		x := gtx.Constraints.Max.X/2 - ib.iconSize/2
+		offOp := op.Offset(image.Pt(x, spacing)).Push(gtx.Ops)
+		gtx1 := gtx
+		gtx1.Constraints.Max = image.Point{ib.iconSize, ib.iconSize}
+		iconDims := en.icon.Layout(gtx1, color.NRGBA{210, 210, 210, 255})
+		innerDims.Size.Y += iconDims.Size.Y + spacing
+		offOp.Pop()
+	}
+	{
+		// Offset down (to after the icon) to draw the name label.
+		offOp := op.Offset(image.Pt(0, innerDims.Size.Y)).Push(gtx.Ops)
+		name := material.Body2(ib.th, en.name)
+		name.Alignment = text.Middle
+		nameDims := name.Layout(gtx)
+		innerDims.Size.Y += nameDims.Size.Y + spacing
+		offOp.Pop()
+	}
+	drawEntry := m.Stop()
+
+	rrOp := clip.UniformRRect(image.Rectangle{Max: innerDims.Size}, 6).Push(gtx.Ops)
+	if click.Hovered() && !clicked {
+		paint.LinearGradientOp{
+			Stop1:  layout.FPt(image.Point{}),
+			Stop2:  layout.FPt(innerDims.Size),
+			Color1: color.NRGBA{32, 32, 32, 255},
+			Color2: color.NRGBA{65, 65, 65, 255},
+		}.Add(gtx.Ops)
+		paint.PaintOp{}.Add(gtx.Ops)
+	}
+	click.Add(gtx.Ops)
+	drawEntry.Add(gtx.Ops)
+	rrOp.Pop()
+
+	insetOffOp.Pop()
+	return D{Size: image.Point{
+		X: gtx.Constraints.Max.X + inset*2,
+		Y: innerDims.Size.Y + inset*2,
+	}}
 }
 
 func (ib *iconBrowser) runSearch() {
