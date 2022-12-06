@@ -70,7 +70,7 @@ type iconBrowser struct {
 	iconSize   int
 	maxWidth   int
 	numPerRow  int
-	flexWeight float32
+	entryWidth int
 }
 
 type searchResponse struct {
@@ -168,11 +168,12 @@ func (ib *iconBrowser) ensure(gtx C) {
 		ib.textSize = ib.th.TextSize
 		ib.iconSize = int(ib.textSize * 2.67)
 		ib.maxWidth = gtx.Constraints.Max.X
-		ib.numPerRow = ib.maxWidth / (ib.iconSize * 4)
+		entryMinWidth := (ib.iconSize * 4)
+		ib.numPerRow = ib.maxWidth / entryMinWidth
 		if ib.numPerRow == 0 {
 			ib.numPerRow = 1
 		}
-		ib.flexWeight = 1.0 / float32(ib.numPerRow)
+		ib.entryWidth = ib.maxWidth / ib.numPerRow
 	}
 }
 
@@ -243,8 +244,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	const inset = 10   // The outer inset that serves as space between entries.
 	const spacing = 15 // The space before and after each inner element of an entry.
 
-	gtx.Constraints.Max.X /= ib.numPerRow
-	gtx.Constraints.Max.X -= inset * 2
+	gtx.Constraints.Max.X = ib.entryWidth - inset*2
 	insetOffOp := op.Offset(image.Point{inset, inset}).Push(gtx.Ops)
 
 	// We need to determine the entry's inner dimensions for two reasons: 1) to properly
