@@ -64,6 +64,7 @@ type iconBrowser struct {
 	resultList      widget.List
 	matchedIndices  []int
 	copyNotif       copyNotif
+	helpOverlay     helpOverlay
 
 	textSize   unit.Sp
 	iconSize   image.Point
@@ -79,7 +80,7 @@ type searchResponse struct {
 
 func (ib *iconBrowser) frame(gtx C) {
 	const topLevelKeySet = "/" +
-		"|Ctrl-[L,U," + key.NameSpace + "]" +
+		"|Ctrl-[H,L,U," + key.NameSpace + "]" +
 		"|Ctrl-[[,]]" +
 		"|" + key.NameEscape +
 		"|" + key.NameUpArrow +
@@ -124,14 +125,19 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 				ed.SetText("")
 				ib.runSearch()
 			}
+		case "H":
+			ib.helpOverlay.active = true
 		}
 	case 0:
 		switch e.Name {
 		case "/":
 			ib.searchInput.Focus()
 		case key.NameEscape:
-			if ib.searchInput.Focused() {
+			switch {
+			case ib.searchInput.Focused():
 				key.FocusOp{Tag: nil}.Add(gtx.Ops)
+			case ib.helpOverlay.active:
+				ib.helpOverlay.active = false
 			}
 		case key.NameUpArrow:
 			ib.resultList.Position.First--
@@ -202,6 +208,9 @@ func (ib *iconBrowser) layout(gtx C) {
 				return ib.copyNotif.layout(gtx, ib.th)
 			})
 		})
+	}
+	if ib.helpOverlay.active {
+		ib.helpOverlay.layout(gtx, ib.th)
 	}
 }
 
@@ -374,6 +383,7 @@ func run() error {
 	win := app.NewWindow(
 		app.Size(980, 770),
 		app.Title("Gio Icon Browser"),
+		app.MinSize(600, 600),
 	)
 
 	th := material.NewTheme([]text.FontFace{
