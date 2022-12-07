@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"time"
 
+	"gioui.org/font/opentype"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -33,6 +34,14 @@ func mustIcon(data []byte) widget.Icon {
 		panic(err)
 	}
 	return *ic
+}
+
+func mustFace(data []byte) text.Face {
+	face, err := opentype.Parse(data)
+	if err != nil {
+		panic("failed to parse font: " + err.Error())
+	}
+	return face
 }
 
 type copyNotif struct {

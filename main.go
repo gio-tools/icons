@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"gioui.org/app"
-	"gioui.org/font/opentype"
 	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -369,14 +368,6 @@ func (ib *iconBrowser) runSearch() {
 			}
 		}
 	}()
-}
-
-func mustFace(data []byte) text.Face {
-	face, err := opentype.Parse(data)
-	if err != nil {
-		panic("failed to parse font: " + err.Error())
-	}
-	return face
 }
 
 func run() error {
