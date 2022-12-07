@@ -170,11 +170,29 @@ func (ib *iconBrowser) layout(gtx C) {
 	}
 	ib.ensure(gtx)
 	paint.Fill(gtx.Ops, ib.th.Bg)
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(ib.layHeader),
-		layout.Rigid(rule{color: ib.th.Fg}.layout),
-		layout.Flexed(1, ib.layResults),
-	)
+
+	rigidHeights := 0
+	{
+		gtx1 := gtx
+		gtx1.Constraints.Min.Y = 0
+		headerDims := ib.layHeader(gtx1)
+		rigidHeights += headerDims.Size.Y
+	}
+	{
+		offOp := op.Offset(image.Pt(0, rigidHeights)).Push(gtx.Ops)
+		hrDims := rule{color: ib.th.Fg}.layout(gtx)
+		rigidHeights += hrDims.Size.Y
+		offOp.Pop()
+	}
+	{
+		offOp := op.Offset(image.Pt(0, rigidHeights)).Push(gtx.Ops)
+		gtx1 := gtx
+		gtx1.Constraints.Max.Y -= rigidHeights
+		listDims := ib.layResults(gtx1)
+		rigidHeights += listDims.Size.Y
+		offOp.Pop()
+	}
+
 	if time.Now().Sub(ib.copyNotif.at) > copyNotifDuration {
 		ib.copyNotif = copyNotif{}
 	}
