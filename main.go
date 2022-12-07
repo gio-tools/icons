@@ -67,7 +67,7 @@ type iconBrowser struct {
 	copyNotif       copyNotif
 
 	textSize   unit.Sp
-	iconSize   int
+	iconSize   image.Point
 	maxWidth   int
 	numPerRow  int
 	entryWidth int
@@ -209,9 +209,10 @@ func (ib *iconBrowser) layout(gtx C) {
 func (ib *iconBrowser) ensure(gtx C) {
 	if ib.textSize != ib.th.TextSize || ib.maxWidth != gtx.Constraints.Max.X {
 		ib.textSize = ib.th.TextSize
-		ib.iconSize = int(ib.textSize * 2.67)
+		icSize := int(ib.textSize * 2.67)
+		ib.iconSize = image.Pt(icSize, icSize)
 		ib.maxWidth = gtx.Constraints.Max.X
-		entryMinWidth := (ib.iconSize * 4)
+		entryMinWidth := (icSize * 4)
 		ib.numPerRow = ib.maxWidth / entryMinWidth
 		if ib.numPerRow == 0 {
 			ib.numPerRow = 1
@@ -302,10 +303,10 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	m := op.Record(gtx.Ops)
 	{
 		// Draw the horizontally centered icon.
-		x := gtx.Constraints.Max.X/2 - ib.iconSize/2
+		x := gtx.Constraints.Max.X/2 - ib.iconSize.X/2
 		offOp := op.Offset(image.Pt(x, spacing)).Push(gtx.Ops)
 		gtx1 := gtx
-		gtx1.Constraints.Max = image.Point{ib.iconSize, ib.iconSize}
+		gtx1.Constraints.Max = ib.iconSize
 		iconDims := en.icon.Layout(gtx1, color.NRGBA{210, 210, 210, 255})
 		innerDims.Size.Y += iconDims.Size.Y + spacing
 		offOp.Pop()
