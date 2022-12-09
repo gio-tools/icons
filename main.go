@@ -65,6 +65,7 @@ type iconBrowser struct {
 	matchedIndices  []int
 	copyNotif       copyNotif
 	helpOverlay     helpOverlay
+	openHelpBtn     widget.Clickable
 
 	textSize   unit.Sp
 	iconSize   image.Point
@@ -209,6 +210,9 @@ func (ib *iconBrowser) layout(gtx C) {
 			})
 		})
 	}
+	if ib.openHelpBtn.Clicked() {
+		ib.helpOverlay.active = true
+	}
 	if ib.helpOverlay.active {
 		ib.helpOverlay.layout(gtx, ib.th)
 	}
@@ -242,6 +246,12 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 			layout.Flexed(1, searchEd.Layout),
 			layout.Rigid(numLbl.Layout),
 			layout.Rigid(material.Caption(ib.th, " icons").Layout),
+			layout.Rigid(layout.Spacer{Width: 16}.Layout),
+			layout.Rigid(func(gtx C) D {
+				btn := material.IconButton(ib.th, &ib.openHelpBtn, &iconHelp, "")
+				btn.Inset = layout.UniformInset(4)
+				return btn.Layout(gtx)
+			}),
 		)
 	})
 }
@@ -381,9 +391,9 @@ func (ib *iconBrowser) runSearch() {
 
 func run() error {
 	win := app.NewWindow(
-		app.Size(980, 770),
 		app.Title("Gio Icon Browser"),
 		app.MinSize(600, 600),
+		app.Size(980, 770),
 	)
 
 	th := material.NewTheme([]text.FontFace{
@@ -395,7 +405,7 @@ func run() error {
 		Bg:         color.NRGBA{15, 15, 15, 255},
 		Fg:         color.NRGBA{230, 230, 230, 255},
 		ContrastFg: color.NRGBA{251, 251, 251, 255},
-		ContrastBg: color.NRGBA{50, 180, 205, 255},
+		ContrastBg: color.NRGBA{64, 200, 224, 255},
 	}
 
 	ib := iconBrowser{
