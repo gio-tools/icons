@@ -60,7 +60,7 @@ func main() {
 	}
 	for _, name := range names {
 		nameWithSpaces := strings.Join(camelcase.Split(name), " ")
-		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s)},\n", nameWithSpaces, strings.ToLower(name), name, name)
+		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s)},\n", nameWithSpaces, name, strings.ToLower(name), name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)
