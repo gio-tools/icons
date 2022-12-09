@@ -64,7 +64,7 @@ type iconBrowser struct {
 	resultList      widget.List
 	matchedIndices  []int
 	copyNotif       copyNotif
-	helpOverlay     helpOverlay
+	helpInfo        helpInfo
 	openHelpBtn     widget.Clickable
 
 	textSize   unit.Sp
@@ -127,7 +127,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 				ib.runSearch()
 			}
 		case "H":
-			ib.helpOverlay.active = true
+			ib.helpInfo.active = true
 		}
 	case 0:
 		switch e.Name {
@@ -137,8 +137,8 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 			switch {
 			case ib.searchInput.Focused():
 				key.FocusOp{Tag: nil}.Add(gtx.Ops)
-			case ib.helpOverlay.active:
-				ib.helpOverlay.active = false
+			case ib.helpInfo.active:
+				ib.helpInfo.active = false
 			}
 		case key.NameUpArrow:
 			ib.resultList.Position.First--
@@ -211,10 +211,10 @@ func (ib *iconBrowser) layout(gtx C) {
 		})
 	}
 	if ib.openHelpBtn.Clicked() {
-		ib.helpOverlay.active = true
+		ib.helpInfo.active = true
 	}
-	if ib.helpOverlay.active {
-		ib.helpOverlay.layout(gtx, ib.th)
+	if ib.helpInfo.active {
+		ib.helpInfo.layout(gtx, ib.th)
 	}
 }
 
