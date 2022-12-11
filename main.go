@@ -24,6 +24,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/steverusso/gio-fonts/redhat/redhatmonoregular"
 	"github.com/steverusso/gio-fonts/vegur/vegurbold"
 	"github.com/steverusso/gio-fonts/vegur/vegurregular"
 )
@@ -64,6 +65,8 @@ type iconBrowser struct {
 	resultList      widget.List
 	matchedIndices  []int
 	copyNotif       copyNotif
+	helpInfo        helpInfo
+	openHelpBtn     widget.Clickable
 
 	textSize   unit.Sp
 	iconSize   image.Point
@@ -79,7 +82,7 @@ type searchResponse struct {
 
 func (ib *iconBrowser) frame(gtx C) {
 	const topLevelKeySet = "/" +
-		"|Ctrl-[L,U," + key.NameSpace + "]" +
+		"|Ctrl-[H,L,U," + key.NameSpace + "]" +
 		"|Ctrl-[[,]]" +
 		"|" + key.NameEscape +
 		"|" + key.NameUpArrow +
@@ -124,14 +127,19 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 				ed.SetText("")
 				ib.runSearch()
 			}
+		case "H":
+			ib.helpInfo.state = helpInfoOpening
 		}
 	case 0:
 		switch e.Name {
 		case "/":
 			ib.searchInput.Focus()
 		case key.NameEscape:
-			if ib.searchInput.Focused() {
+			switch {
+			case ib.searchInput.Focused():
 				key.FocusOp{Tag: nil}.Add(gtx.Ops)
+			case ib.helpInfo.state == helpInfoOpened:
+				ib.helpInfo.state = helpInfoClosing
 			}
 		case key.NameUpArrow:
 			ib.resultList.Position.First--
@@ -203,6 +211,12 @@ func (ib *iconBrowser) layout(gtx C) {
 			})
 		})
 	}
+	if ib.openHelpBtn.Clicked() {
+		ib.helpInfo.state = helpInfoOpening
+	}
+	if ib.helpInfo.state != helpInfoClosed {
+		ib.helpInfo.layout(gtx, ib.th)
+	}
 }
 
 func (ib *iconBrowser) ensure(gtx C) {
@@ -233,6 +247,13 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 			layout.Flexed(1, searchEd.Layout),
 			layout.Rigid(numLbl.Layout),
 			layout.Rigid(material.Caption(ib.th, " icons").Layout),
+			layout.Rigid(layout.Spacer{Width: 16}.Layout),
+			layout.Rigid(func(gtx C) D {
+				btn := material.IconButton(ib.th, &ib.openHelpBtn, &iconHelp, "")
+				btn.Size = 28
+				btn.Inset = layout.UniformInset(2)
+				return btn.Layout(gtx)
+			}),
 		)
 	})
 }
@@ -372,20 +393,22 @@ func (ib *iconBrowser) runSearch() {
 
 func run() error {
 	win := app.NewWindow(
-		app.Size(980, 770),
 		app.Title("Gio Icon Browser"),
+		app.MinSize(600, 600),
+		app.Size(980, 770),
 	)
 
 	th := material.NewTheme([]text.FontFace{
 		{Font: text.Font{Typeface: "Vegur"}, Face: mustFace(vegurregular.OTF)},
 		{Font: text.Font{Typeface: "Vegur", Weight: text.Bold}, Face: mustFace(vegurbold.OTF)},
+		{Font: text.Font{Variant: "Mono"}, Face: mustFace(redhatmonoregular.TTF)},
 	})
 	th.TextSize = 18
 	th.Palette = material.Palette{
 		Bg:         color.NRGBA{15, 15, 15, 255},
 		Fg:         color.NRGBA{230, 230, 230, 255},
 		ContrastFg: color.NRGBA{251, 251, 251, 255},
-		ContrastBg: color.NRGBA{50, 180, 205, 255},
+		ContrastBg: color.NRGBA{89, 173, 196, 255},
 	}
 
 	ib := iconBrowser{
