@@ -68,16 +68,16 @@ func (h *helpInfo) layout(gtx C, th *material.Theme) D {
 		}
 		op.InvalidateOp{}.Add(gtx.Ops)
 	}
-	if h.closeBtn.Clicked() {
-		h.state = helpInfoClosing
-	} else {
-		for _, e := range h.click.Events(gtx) {
-			// Close the drawer if the user clicks the outside overlay.
-			if e.Type == gesture.TypePress && e.Position.X < gtx.Constraints.Max.X-drawerWidth {
-				h.state = helpInfoClosing
-				break
-			}
+	var overlayClicked bool
+	for _, e := range h.click.Events(gtx) {
+		// Close the drawer if the user clicks the overlay area outside of the drawer.
+		if e.Type == gesture.TypePress && e.Position.X < gtx.Constraints.Max.X-drawerWidth {
+			overlayClicked = true
+			break
 		}
+	}
+	if h.closeBtn.Clicked() || overlayClicked {
+		h.state = helpInfoClosing
 	}
 	originMax := gtx.Constraints.Max
 	// Draw the overlay and clip the entire window area for click events so they don't
