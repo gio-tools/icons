@@ -72,7 +72,7 @@ func (h *helpInfo) layout(gtx C, th *material.Theme) D {
 		h.state = helpInfoClosing
 	} else {
 		for _, e := range h.click.Events(gtx) {
-			// Close the drawer if the user clicks outside it.
+			// Close the drawer if the user clicks the outside overlay.
 			if e.Type == gesture.TypePress && e.Position.X < gtx.Constraints.Max.X-drawerWidth {
 				h.state = helpInfoClosing
 				break
@@ -124,7 +124,6 @@ func (h *helpInfo) layout(gtx C, th *material.Theme) D {
 
 func layShortcutRow(gtx C, th *material.Theme, idx int) D {
 	// Draw the keystroke text in the first column.
-	colWidth1 := int(float32(gtx.Constraints.Max.X) * 0.4)
 	height := 0
 	{
 		xOffset := 0
@@ -151,8 +150,9 @@ func layShortcutRow(gtx C, th *material.Theme, idx int) D {
 	}
 	// Move to draw the description text in the 2nd column.
 	fullWidth := gtx.Constraints.Max.X
-	gtx.Constraints.Max.X -= colWidth1 - 16
-	offOpCol2 := op.Offset(image.Pt(colWidth1+16, 0)).Push(gtx.Ops)
+	xOffset := int(float32(fullWidth)*0.4) + 16
+	offOpCol2 := op.Offset(image.Pt(xOffset, 0)).Push(gtx.Ops)
+	gtx.Constraints.Max.X -= xOffset
 	dims := material.Body1(th, allShortcuts[idx].desc).Layout(gtx)
 	if dims.Size.Y > height {
 		height = dims.Size.Y
