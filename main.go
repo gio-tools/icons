@@ -24,6 +24,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/steverusso/gio-fonts/redhat/redhatmonoregular"
 	"github.com/steverusso/gio-fonts/vegur/vegurbold"
 	"github.com/steverusso/gio-fonts/vegur/vegurregular"
 )
@@ -127,7 +128,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 				ib.runSearch()
 			}
 		case "H":
-			ib.helpInfo.active = true
+			ib.helpInfo.state = helpInfoOpening
 		}
 	case 0:
 		switch e.Name {
@@ -137,8 +138,8 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 			switch {
 			case ib.searchInput.Focused():
 				key.FocusOp{Tag: nil}.Add(gtx.Ops)
-			case ib.helpInfo.active:
-				ib.helpInfo.active = false
+			case ib.helpInfo.state == helpInfoOpened:
+				ib.helpInfo.state = helpInfoClosing
 			}
 		case key.NameUpArrow:
 			ib.resultList.Position.First--
@@ -211,9 +212,9 @@ func (ib *iconBrowser) layout(gtx C) {
 		})
 	}
 	if ib.openHelpBtn.Clicked() {
-		ib.helpInfo.active = true
+		ib.helpInfo.state = helpInfoOpening
 	}
-	if ib.helpInfo.active {
+	if ib.helpInfo.state != helpInfoClosed {
 		ib.helpInfo.layout(gtx, ib.th)
 	}
 }
@@ -249,7 +250,8 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 			layout.Rigid(layout.Spacer{Width: 16}.Layout),
 			layout.Rigid(func(gtx C) D {
 				btn := material.IconButton(ib.th, &ib.openHelpBtn, &iconHelp, "")
-				btn.Inset = layout.UniformInset(4)
+				btn.Size = 28
+				btn.Inset = layout.UniformInset(2)
 				return btn.Layout(gtx)
 			}),
 		)
@@ -399,13 +401,14 @@ func run() error {
 	th := material.NewTheme([]text.FontFace{
 		{Font: text.Font{Typeface: "Vegur"}, Face: mustFace(vegurregular.OTF)},
 		{Font: text.Font{Typeface: "Vegur", Weight: text.Bold}, Face: mustFace(vegurbold.OTF)},
+		{Font: text.Font{Variant: "Mono"}, Face: mustFace(redhatmonoregular.TTF)},
 	})
 	th.TextSize = 18
 	th.Palette = material.Palette{
 		Bg:         color.NRGBA{15, 15, 15, 255},
 		Fg:         color.NRGBA{230, 230, 230, 255},
 		ContrastFg: color.NRGBA{251, 251, 251, 255},
-		ContrastBg: color.NRGBA{64, 200, 224, 255},
+		ContrastBg: color.NRGBA{89, 173, 196, 255},
 	}
 
 	ib := iconBrowser{
