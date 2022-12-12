@@ -99,5 +99,3 @@ func (rl rule) layout(gtx C) D {
 	paint.FillShape(gtx.Ops, rl.color, rect)
 	return D{Size: size}
 }
-
-func emptyWidget(gtx C) D { return D{} }
