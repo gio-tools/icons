@@ -123,6 +123,7 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 			}
 		case "L", key.NameSpace:
 			ib.searchInput.Focus()
+			ib.searchInput.SetCaret(ib.searchInput.Len(), 0)
 		case "U":
 			if ed := &ib.searchInput; ed.Focused() {
 				ed.SetText("")
