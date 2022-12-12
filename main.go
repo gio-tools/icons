@@ -14,6 +14,7 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/gesture"
+	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -294,7 +295,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	}
 	if clicked {
 		varPath := "icons." + en.varName
-		ib.win.WriteClipboard(varPath)
+		clipboard.WriteOp{Text: varPath}.Add(gtx.Ops)
 		ib.copyNotif = copyNotif{
 			msg: varPath,
 			at:  time.Now(),
