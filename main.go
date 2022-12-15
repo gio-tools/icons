@@ -354,8 +354,8 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 
 	const animationMillis = 200
 	const halfMillis = animationMillis / 2
-	// We animate click presses by scaling the entry down by 25% and back over the course
-	// of 200 milliseconds.
+	// We animate click presses by scaling the entry down and back up over a certain time
+	// frame.
 	msSincePress := gtx.Now.Sub(click.lastPressAt).Milliseconds()
 	isAnimating := msSincePress < animationMillis
 	if isAnimating {
