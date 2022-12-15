@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"gioui.org/app"
+	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
@@ -40,8 +41,13 @@ var (
 
 var (
 	allIndices  [numEntries]int
-	entryClicks [numEntries]gesture.Click
+	entryClicks [numEntries]clickState
 )
+
+type clickState struct {
+	lastClickAt time.Time
+	gesture.Click
+}
 
 func init() {
 	for i := 0; i < numEntries; i++ {
@@ -292,9 +298,11 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			clicked = true
+			break
 		}
 	}
 	if clicked {
+		click.lastClickAt = gtx.Now
 		varPath := "icons." + en.varName
 		clipboard.WriteOp{Text: varPath}.Add(gtx.Ops)
 		ib.copyNotif = copyNotif{
@@ -344,8 +352,27 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	}
 	drawEntry := m.Stop()
 
+	const animationMillis = 200
+	const halfMillis = animationMillis / 2
+
+	timeSinceClick := gtx.Now.Sub(click.lastClickAt)
+	isAnimating := timeSinceClick < time.Millisecond*animationMillis
+	if isAnimating {
+		origin := f32.Pt(float32(innerDims.Size.X)/2, float32(innerDims.Size.Y)/2)
+		numMillis := float32(timeSinceClick.Milliseconds())
+		pctScale := 1 - (numMillis / halfMillis)
+		if numMillis > halfMillis {
+			pctScale = (numMillis - halfMillis) / halfMillis
+		}
+		pctScale = 0.75 + (0.25 * pctScale)
+		af := f32.Affine2D{}
+		af = af.Scale(origin, f32.Pt(pctScale, pctScale))
+		op.Affine(af).Add(gtx.Ops)
+		op.InvalidateOp{}.Add(gtx.Ops)
+	}
+
 	rrOp := clip.UniformRRect(image.Rectangle{Max: innerDims.Size}, 6).Push(gtx.Ops)
-	if click.Hovered() && !clicked {
+	if click.Hovered() || isAnimating {
 		paint.LinearGradientOp{
 			Stop1:  layout.FPt(image.Point{}),
 			Stop2:  layout.FPt(innerDims.Size),
