@@ -45,7 +45,7 @@ var (
 )
 
 type clickState struct {
-	lastClickAt time.Time
+	lastPressAt time.Time
 	gesture.Click
 }
 
@@ -294,15 +294,15 @@ func (ib *iconBrowser) layResults(gtx C) D {
 func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	en := &allEntries[index]
 	click := &entryClicks[index]
-	var clicked bool
+	var pressed bool
 	for _, e := range click.Events(gtx) {
-		if e.Type == gesture.TypeClick {
-			clicked = true
+		if e.Type == gesture.TypePress {
+			pressed = true
 			break
 		}
 	}
-	if clicked {
-		click.lastClickAt = gtx.Now
+	if pressed {
+		click.lastPressAt = gtx.Now
 		varPath := "icons." + en.varName
 		clipboard.WriteOp{Text: varPath}.Add(gtx.Ops)
 		ib.copyNotif = copyNotif{
@@ -355,11 +355,11 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	const animationMillis = 200
 	const halfMillis = animationMillis / 2
 
-	timeSinceClick := gtx.Now.Sub(click.lastClickAt)
-	isAnimating := timeSinceClick < time.Millisecond*animationMillis
+	timeSincePress := gtx.Now.Sub(click.lastPressAt)
+	isAnimating := timeSincePress < time.Millisecond*animationMillis
 	if isAnimating {
 		origin := f32.Pt(float32(innerDims.Size.X)/2, float32(innerDims.Size.Y)/2)
-		numMillis := float32(timeSinceClick.Milliseconds())
+		numMillis := float32(timeSincePress.Milliseconds())
 		pctScale := 1 - (numMillis / halfMillis)
 		if numMillis > halfMillis {
 			pctScale = (numMillis - halfMillis) / halfMillis
