@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"gioui.org/app"
+	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
@@ -40,8 +41,13 @@ var (
 
 var (
 	allIndices  [numEntries]int
-	entryClicks [numEntries]gesture.Click
+	entryClicks [numEntries]clickState
 )
+
+type clickState struct {
+	lastPressAt time.Time
+	gesture.Click
+}
 
 func init() {
 	for i := 0; i < numEntries; i++ {
@@ -288,13 +294,15 @@ func (ib *iconBrowser) layResults(gtx C) D {
 func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	en := &allEntries[index]
 	click := &entryClicks[index]
-	var clicked bool
+	var pressed bool
 	for _, e := range click.Events(gtx) {
-		if e.Type == gesture.TypeClick {
-			clicked = true
+		if e.Type == gesture.TypePress {
+			pressed = true
+			break
 		}
 	}
-	if clicked {
+	if pressed {
+		click.lastPressAt = gtx.Now
 		varPath := "icons." + en.varName
 		clipboard.WriteOp{Text: varPath}.Add(gtx.Ops)
 		ib.copyNotif = copyNotif{
@@ -343,9 +351,33 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 		offOp.Pop()
 	}
 	drawEntry := m.Stop()
+	// We animate click presses by scaling the entry down and back up over a certain time
+	// frame.
+	const animTimeFrame = 200
+	sinceLastPress := gtx.Now.Sub(click.lastPressAt).Milliseconds()
+	isAnimating := sinceLastPress < animTimeFrame
+	if isAnimating {
+		const halfMillis = animTimeFrame / 2
+		// The scaling factor is some percentage between 70% - 100%, based on where we are
+		// in the animation time frame (70% being halfway through). Since the animation is
+		// "shrink down and expand back to normal size," we need the same scale factor on
+		// both halves of the time frame. In other words, if the animation time frame is
+		// 200ms, we should scale the entry to 85% (halfway scaled down) for both 50ms
+		// (halfway there) and 150ms (halfway back).
+		pct := 1 - (float32(sinceLastPress) / halfMillis)
+		if sinceLastPress > halfMillis {
+			pct = (float32(sinceLastPress) - halfMillis) / halfMillis
+		}
+		// The origin point is the center of the entry.
+		origin := f32.Pt(float32(innerDims.Size.X)/2, float32(innerDims.Size.Y)/2)
+		scale := 0.7 + (0.3 * pct)
+		af := f32.Affine2D{}.Scale(origin, f32.Pt(scale, scale))
+		op.Affine(af).Add(gtx.Ops)
+		op.InvalidateOp{}.Add(gtx.Ops)
+	}
 
 	rrOp := clip.UniformRRect(image.Rectangle{Max: innerDims.Size}, 6).Push(gtx.Ops)
-	if click.Hovered() && !clicked {
+	if click.Hovered() || isAnimating {
 		paint.LinearGradientOp{
 			Stop1:  layout.FPt(image.Point{}),
 			Stop2:  layout.FPt(innerDims.Size),
