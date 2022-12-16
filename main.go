@@ -351,29 +351,29 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 		offOp.Pop()
 	}
 	drawEntry := m.Stop()
-
-	const animationMillis = 200
-	const halfMillis = animationMillis / 2
 	// We animate click presses by scaling the entry down and back up over a certain time
 	// frame.
-	msSincePress := gtx.Now.Sub(click.lastPressAt).Milliseconds()
-	isAnimating := msSincePress < animationMillis
+	const animTimeFrame = 200
+	sinceLastPress := gtx.Now.Sub(click.lastPressAt).Milliseconds()
+	isAnimating := sinceLastPress < animTimeFrame
 	if isAnimating {
-		op.InvalidateOp{}.Add(gtx.Ops)
+		const halfMillis = animTimeFrame / 2
 		// The scaling factor is some percentage between 70% - 100%, based on where we are
-		// in the animation time, 70% being mid way through. Since the animation is
+		// in the animation time frame (70% being halfway through). Since the animation is
 		// "shrink down and expand back to normal size," we need the same scale factor on
-		// both sides of the time window. In other words, we should scale the entry to 85%
-		// (halfway scaled down) for both 50ms (halfway there) and 150ms (halfway back).
-		pct := 1 - (float32(msSincePress) / halfMillis)
-		if msSincePress > halfMillis {
-			pct = (float32(msSincePress) - halfMillis) / halfMillis
+		// both halves of the time frame. In other words, if the animation time frame is
+		// 200ms, we should scale the entry to 85% (halfway scaled down) for both 50ms
+		// (halfway there) and 150ms (halfway back).
+		pct := 1 - (float32(sinceLastPress) / halfMillis)
+		if sinceLastPress > halfMillis {
+			pct = (float32(sinceLastPress) - halfMillis) / halfMillis
 		}
 		// The origin point is the center of the entry.
 		origin := f32.Pt(float32(innerDims.Size.X)/2, float32(innerDims.Size.Y)/2)
 		scale := 0.7 + (0.3 * pct)
 		af := f32.Affine2D{}.Scale(origin, f32.Pt(scale, scale))
 		op.Affine(af).Add(gtx.Ops)
+		op.InvalidateOp{}.Add(gtx.Ops)
 	}
 
 	rrOp := clip.UniformRRect(image.Rectangle{Max: innerDims.Size}, 6).Push(gtx.Ops)
