@@ -6,6 +6,8 @@ package, built with and for [Gio](https://gioui.org/).
 
 ## Development
 
+#### Native
+
 To build the app, run `go build` (or just `go build -tags nowayland` for no Wayland
 support).
 
@@ -13,6 +15,12 @@ If you have [`task`](https://github.com/go-task/task),
 [`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) and
 [`gofumpt`](https://github.com/mvdan/gofumpt) installed, you can simply run
 `task` (or `task nowayland`) to fmt, lint and build the project.
+
+#### WebAssembly
+
+If you have [`gogio` installed](https://gioui.org/doc/install/wasm), you can run `task
+wasm` to build the web assembly assets. To view these in a browser, serve up the files in
+the `wasm_assets` directory.
 
 ## Acknowledgements
 
