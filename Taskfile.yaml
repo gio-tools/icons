@@ -4,22 +4,18 @@ version: '3'
 
 tasks:
   default:
-    cmds:
-      - task: fmt
-      - go build -ldflags="-s -w"
-      - task: lint
+    - task: fmt
+    - go build -ldflags="-s -w"
+    - task: lint
 
   nowayland:
-    cmds:
-      - task: fmt
-      - go build -ldflags="-s -w" -tags nowayland
-      - task: lint
+    - task: fmt
+    - go build -ldflags="-s -w" -tags nowayland
+    - task: lint
 
   fmt:
-    cmds:
-      - goimports -w -l .
-      - gofumpt -w -l .
+    - goimports -w -l .
+    - gofumpt -w -l .
 
   lint:
-    cmds:
-      - go vet ./...
+    - go vet ./...
