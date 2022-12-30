@@ -8,11 +8,6 @@ tasks:
     - go build -ldflags="-s -w"
     - task: lint
 
-  nowayland:
-    - task: fmt
-    - go build -ldflags="-s -w" -tags nowayland
-    - task: lint
-
   wasm:
     - gogio -target js -ldflags="-s -w" -o wasm_assets github.com/steverusso/gio-icon-browser
 
