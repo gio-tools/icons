@@ -452,6 +452,7 @@ func run() error {
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
 		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
 	}
+	ib.searchInput.Focus()
 
 	var ops op.Ops
 	for {
