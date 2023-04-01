@@ -15,7 +15,7 @@ const srcHeader = `// This is generated code. DO NOT EDIT
 package main
 
 import (
-	. "golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const numEntries = %d
@@ -60,7 +60,7 @@ func main() {
 	}
 	for _, name := range names {
 		nameWithSpaces := strings.Join(camelcase.Split(name), " ")
-		fmt.Fprintf(out, "\t{%q, %q, %q, mi(%s)},\n", nameWithSpaces, name, strings.ToLower(name), name)
+		fmt.Fprintf(out, "\t{%q, %q, %q, mi(icons.%s)},\n", nameWithSpaces, name, strings.ToLower(name), name)
 	}
 	if _, err = out.WriteString("}\n"); err != nil {
 		log.Fatalf("writing last curly bracket: %v", err)
