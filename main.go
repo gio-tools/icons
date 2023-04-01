@@ -208,7 +208,7 @@ func (ib *iconBrowser) layout(gtx C) {
 		offOp.Pop()
 	}
 
-	if time.Now().Sub(ib.copyNotif.at) > copyNotifDuration {
+	if time.Since(ib.copyNotif.at) > copyNotifDuration {
 		ib.copyNotif = copyNotif{}
 	}
 	if ib.copyNotif.msg != "" {
@@ -408,7 +408,7 @@ func (ib *iconBrowser) runSearch() {
 		defer func() {
 			ib.searchResponses <- resp
 			if *printSearchTimes {
-				log.Println(time.Now().Sub(start))
+				log.Println(time.Since(start))
 			}
 		}()
 		input := strings.ToLower(ib.searchInput.Text())
@@ -471,7 +471,7 @@ func run() error {
 				ib.frame(gtx)
 				e.Frame(gtx.Ops)
 				if *printFrameTimes {
-					log.Println(time.Now().Sub(start))
+					log.Println(time.Since(start))
 				}
 			case system.DestroyEvent:
 				return e.Err
