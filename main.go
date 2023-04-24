@@ -203,8 +203,7 @@ func (ib *iconBrowser) layout(gtx C) {
 		offOp := op.Offset(image.Pt(0, rigidHeights)).Push(gtx.Ops)
 		gtx1 := gtx
 		gtx1.Constraints.Max.Y -= rigidHeights
-		listDims := ib.layResults(gtx1)
-		rigidHeights += listDims.Size.Y
+		_ = ib.layResults(gtx1)
 		offOp.Pop()
 	}
 
