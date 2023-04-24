@@ -1,5 +1,13 @@
 # gio-icon-browser
 
+[![GitHub CI](https://github.com/steverusso/gio-icon-browser/actions/workflows/ci.yaml/badge.svg)](https://github.com/steverusso/gio-icon-browser/actions/workflows/ci.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/steverusso/gio-icon-browser)](https://goreportcard.com/report/github.com/steverusso/gio-icon-browser)
+[![Go Reference](https://pkg.go.dev/badge/github.com/steverusso/gio-icon-browser.svg)](https://pkg.go.dev/github.com/steverusso/gio-icon-browser)
+
+```
+go install github.com/steverusso/gio-icon-browser@latest
+```
+
 A browser of every icon in the
 [golang.org/x/exp/shiny/materialdesign/icons](https://pkg.go.dev/golang.org/x/exp/shiny/materialdesign/icons)
 package, built with and for [Gio](https://gioui.org/).
@@ -12,9 +20,10 @@ To build the app, run `go build` (or just `go build -tags nowayland` for no Wayl
 support).
 
 If you have [`task`](https://github.com/go-task/task),
-[`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) and
-[`gofumpt`](https://github.com/mvdan/gofumpt) installed, you can simply run
-`task` (or `task nowayland`) to fmt, lint and build the project.
+[`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports),
+[`gofumpt`](https://github.com/mvdan/gofumpt) and
+[`staticcheck`](https://github.com/dominikh/go-tools) installed, you can simply run `task`
+(or `task nowayland`) to fmt, lint and build the project.
 
 #### WebAssembly
 
