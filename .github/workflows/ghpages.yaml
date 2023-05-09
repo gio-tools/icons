@@ -1,0 +1,44 @@
+name: ghpages
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Install gogio
+        run: go install gioui.org/cmd/gogio@latest
+
+      - name: Build wasm assets
+        run: gogio -target js -ldflags="-s -w" -o wasm_assets github.com/steverusso/gio-icon-browser
+
+      - name: Upload wasm assets
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./wasm_assets
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
