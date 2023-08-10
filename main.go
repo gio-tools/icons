@@ -121,11 +121,11 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 		switch e.Name {
 		case "[":
 			if ib.th.TextSize > 5 {
-				ib.th.TextSize -= 1
+				ib.th.TextSize--
 			}
 		case "]":
 			if ib.th.TextSize < 65 {
-				ib.th.TextSize += 1
+				ib.th.TextSize++
 			}
 		case "L", key.NameSpace:
 			ib.searchInput.Focus()
