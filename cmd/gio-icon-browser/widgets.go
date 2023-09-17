@@ -27,10 +27,6 @@ var (
 	iconSearch    = mustIcon(icons.ActionSearch)
 )
 
-// The function `mustIcon` is primarily used as part of each icon entry within
-// `data.go`. Shortening the name to `mi` reduces that file size by about 6kb.
-var mi = mustIcon
-
 // mustIcon returns a new `widget.Icon` for the given byte slice or panics on error.
 func mustIcon(data []byte) widget.Icon {
 	ic, err := widget.NewIcon(data)
