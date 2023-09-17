@@ -59,7 +59,7 @@ type iconEntry struct {
 	name    string // The human readable name.
 	varName string // The actual variable name in the icons package.
 	key     string // The variable name, but all lowercase for search matching.
-	icon    widget.Icon
+	icon    *widget.Icon
 }
 
 type iconBrowser struct {
