@@ -1,4 +1,4 @@
-module github.com/steverusso/gio-icon-browser
+module gio.tools/icons
 
 go 1.19
 
