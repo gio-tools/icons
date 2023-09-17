@@ -1,18 +1,26 @@
-# gio-icon-browser
+# icons
 
-[![GitHub CI](https://github.com/steverusso/gio-icon-browser/actions/workflows/ci.yaml/badge.svg)](https://github.com/steverusso/gio-icon-browser/actions/workflows/ci.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/steverusso/gio-icon-browser)](https://goreportcard.com/report/github.com/steverusso/gio-icon-browser)
-[![Go Reference](https://pkg.go.dev/badge/github.com/steverusso/gio-icon-browser.svg)](https://pkg.go.dev/github.com/steverusso/gio-icon-browser)
+[![GitHub CI](https://github.com/gio-tools/icons/actions/workflows/ci.yaml/badge.svg)](https://github.com/gio-tools/icons/actions/workflows/ci.yaml)
+[![Go Report Card](https://goreportcard.com/badge/gio.tools/icons)](https://goreportcard.com/report/gio.tools/icons)
+[![Go Reference](https://pkg.go.dev/badge/gio.tools/icons.svg)](https://pkg.go.dev/gio.tools/icons)
 
 ```
-go install github.com/steverusso/gio-icon-browser@latest
+go get gio.tools/icons
 ```
 
-A browser of every icon in the
+This package contains all of the icons in
+[golang.org/x/exp/shiny/materialdesign/icons](https://pkg.go.dev/golang.org/x/exp/shiny/materialdesign/icons)
+as [Gio](https://gioui.org) icon widgets.
+
+## Icon Browser
+
+```
+go install gio.tools/icons/cmd/gio-icon-browser@latest
+```
+
+This project also has a browser of every icon in the
 [golang.org/x/exp/shiny/materialdesign/icons](https://pkg.go.dev/golang.org/x/exp/shiny/materialdesign/icons)
 package, built with and for [Gio](https://gioui.org/).
-
-## Development
 
 #### Native
 
@@ -31,7 +39,7 @@ If you have [`gogio` installed](https://gioui.org/doc/install/wasm), you can run
 wasm` to build the web assembly assets. To view these in a browser, serve up the files in
 the `wasm_assets` directory.
 
-## Acknowledgements
+### Acknowledgements
 
 The idea and name are inspired by the `gtk3-icon-browser` and
 `gtk4-icon-browser`. The use of `golang.org/x/tool/go/packages` to generate the
