@@ -1,6 +1,6 @@
 module gio.tools/icons
 
-go 1.19
+go 1.21.0
 
 require (
 	gioui.org v0.0.0-20221210181309-a22e0f527aa4
