@@ -20,7 +20,7 @@ jobs:
         run: go install gioui.org/cmd/gogio@latest
 
       - name: Build wasm assets
-        run: gogio -target js -ldflags="-s -w" -o wasm_assets github.com/steverusso/gio-icon-browser
+        run: gogio -target js -ldflags="-s -w" -o wasm_assets gio.tools/icons/cmd/gio-icon-browser
 
       - name: Upload wasm assets
         uses: actions/upload-pages-artifact@v1
