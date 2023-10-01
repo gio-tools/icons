@@ -11,30 +11,13 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
-	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 type (
 	C = layout.Context
 	D = layout.Dimensions
 )
-
-var (
-	iconExitToApp = mustIcon(icons.ActionExitToApp)
-	iconHelp      = mustIcon(icons.ActionHelpOutline)
-	iconSearch    = mustIcon(icons.ActionSearch)
-)
-
-// mustIcon returns a new `widget.Icon` for the given byte slice or panics on error.
-func mustIcon(data []byte) widget.Icon {
-	ic, err := widget.NewIcon(data)
-	if err != nil {
-		panic(err)
-	}
-	return *ic
-}
 
 type copyNotif struct {
 	msg string

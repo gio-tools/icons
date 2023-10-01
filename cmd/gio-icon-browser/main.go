@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"gio.tools/fonts/vegur"
+	"gio.tools/icons"
 	"gioui.org/app"
 	"gioui.org/f32"
 	"gioui.org/font"
@@ -247,7 +248,7 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 	return layout.UniformInset(16).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return iconSearch.Layout(gtx, ib.th.Fg)
+				return icons.ActionSearch.Layout(gtx, ib.th.Fg)
 			}),
 			layout.Rigid(layout.Spacer{Width: 16}.Layout),
 			layout.Flexed(1, searchEd.Layout),
@@ -255,7 +256,7 @@ func (ib *iconBrowser) layHeader(gtx C) D {
 			layout.Rigid(material.Caption(ib.th, " icons").Layout),
 			layout.Rigid(layout.Spacer{Width: 16}.Layout),
 			layout.Rigid(func(gtx C) D {
-				btn := material.IconButton(ib.th, &ib.openHelpBtn, &iconHelp, "")
+				btn := material.IconButton(ib.th, &ib.openHelpBtn, icons.ActionHelpOutline, "")
 				btn.Size = 28
 				btn.Inset = layout.UniformInset(2)
 				return btn.Layout(gtx)

@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 
+	"gio.tools/icons"
 	"gioui.org/font"
 	"gioui.org/gesture"
 	"gioui.org/layout"
@@ -98,7 +99,7 @@ func (h *helpInfo) layout(gtx C, th *material.Theme) D {
 		{
 			lbl := material.H5(th, "Keyboard Shortcuts")
 			lbl.Font.Weight = font.Bold
-			btn := material.IconButton(th, &h.closeBtn, &iconExitToApp, "")
+			btn := material.IconButton(th, &h.closeBtn, icons.ActionExitToApp, "")
 			btn.Inset = layout.UniformInset(4)
 			dims := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, lbl.Layout),
