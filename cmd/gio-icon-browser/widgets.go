@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"time"
 
-	"gioui.org/font/opentype"
+	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -36,14 +36,6 @@ func mustIcon(data []byte) widget.Icon {
 	return *ic
 }
 
-func mustFace(data []byte) text.Face {
-	face, err := opentype.Parse(data)
-	if err != nil {
-		panic("failed to parse font: " + err.Error())
-	}
-	return face
-}
-
 type copyNotif struct {
 	msg string
 	at  time.Time
@@ -53,7 +45,7 @@ func (n *copyNotif) layout(gtx C, th *material.Theme) D {
 	lbl := material.Body1(th, n.msg)
 	lbl.Alignment = text.Middle
 	lbl.Color = color.NRGBA{255, 255, 255, 255}
-	lbl.Font.Weight = text.SemiBold
+	lbl.Font.Weight = font.SemiBold
 	m := op.Record(gtx.Ops)
 	dims := layout.Inset{Top: 20, Right: 25, Bottom: 20, Left: 25}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
