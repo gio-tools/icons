@@ -4,12 +4,12 @@ import (
 	"image"
 	"image/color"
 
+	"gioui.org/font"
 	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
@@ -97,7 +97,7 @@ func (h *helpInfo) layout(gtx C, th *material.Theme) D {
 		height := 0
 		{
 			lbl := material.H5(th, "Keyboard Shortcuts")
-			lbl.Font.Weight = text.Bold
+			lbl.Font.Weight = font.Bold
 			btn := material.IconButton(th, &h.closeBtn, &iconExitToApp, "")
 			btn.Inset = layout.UniformInset(4)
 			dims := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
@@ -137,7 +137,7 @@ func layShortcutRow(gtx C, th *material.Theme, idx int) D {
 				return layout.Inset{Top: 3, Right: 8, Bottom: 3, Left: 8}.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = 0
 					lbl := material.Body2(th, allShortcuts[idx].keys[i])
-					lbl.Font.Variant = "Mono"
+					lbl.Font.Typeface = "monospace"
 					return lbl.Layout(gtx)
 				})
 			})

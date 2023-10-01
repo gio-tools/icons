@@ -12,8 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"gio.tools/fonts/vegur"
 	"gioui.org/app"
 	"gioui.org/f32"
+	"gioui.org/font"
 	"gioui.org/gesture"
 	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
@@ -26,9 +28,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/steverusso/gio-fonts/redhat/redhatmonoregular"
-	"github.com/steverusso/gio-fonts/vegur/vegurbold"
-	"github.com/steverusso/gio-fonts/vegur/vegurregular"
 )
 
 const copyNotifDuration = time.Second * 3
@@ -244,7 +243,7 @@ func (ib *iconBrowser) ensure(gtx C) {
 func (ib *iconBrowser) layHeader(gtx C) D {
 	searchEd := material.Editor(ib.th, &ib.searchInput, "Search...")
 	numLbl := material.Body2(ib.th, strconv.Itoa(len(ib.matchedIndices)))
-	numLbl.Font.Weight = text.Bold
+	numLbl.Font.Weight = font.Bold
 	return layout.UniformInset(16).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -314,6 +313,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 			ib.win.Invalidate()
 		}()
 	}
+
 	const inset = 10   // The outer inset that serves as space between entries.
 	const spacing = 15 // The space before and after each inner element of an entry.
 
@@ -341,6 +341,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 		offOp.Pop()
 	}
 	{
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		// Offset down (to after the icon) to draw the name label.
 		offOp := op.Offset(image.Pt(0, innerDims.Size.Y)).Push(gtx.Ops)
 		name := material.Body2(ib.th, en.name)
@@ -350,6 +351,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 		offOp.Pop()
 	}
 	drawEntry := m.Stop()
+
 	// We animate click presses by scaling the entry down and back up over a certain time
 	// frame.
 	const animTimeFrame = 200
@@ -431,11 +433,8 @@ func run() error {
 		app.Size(980, 770),
 	)
 
-	th := material.NewTheme([]text.FontFace{
-		{Font: text.Font{Typeface: "Vegur"}, Face: mustFace(vegurregular.OTF)},
-		{Font: text.Font{Typeface: "Vegur", Weight: text.Bold}, Face: mustFace(vegurbold.OTF)},
-		{Font: text.Font{Variant: "Mono"}, Face: mustFace(redhatmonoregular.TTF)},
-	})
+	th := material.NewTheme()
+	th.Shaper = text.NewShaper(text.WithCollection(vegur.Collection()))
 	th.TextSize = 18
 	th.Palette = material.Palette{
 		Bg:         color.NRGBA{15, 15, 15, 255},
