@@ -6,10 +6,15 @@ tasks:
   default:
     - task: fmt
     - go build -ldflags="-s -w"
+    - go build -ldflags="-s -w" -o gio-icon-browser cmd/gio-icon-browser/*
     - task: lint
 
+  gen:
+    - task: fmt
+    - go run ./cmd/gen/main.go
+
   wasm:
-    - gogio -target js -ldflags="-s -w" -o wasm_assets github.com/steverusso/gio-icon-browser
+    - gogio -target js -ldflags="-s -w" -o wasm_assets gio.tools/icons/cmd/gio-icon-browser
 
   fmt:
     - goimports -w -l .
