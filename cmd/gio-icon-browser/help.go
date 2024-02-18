@@ -60,24 +60,27 @@ func (h *helpInfo) layout(gtx C, th *material.Theme) D {
 		} else {
 			h.portion += 50
 		}
-		op.InvalidateOp{}.Add(gtx.Ops)
+		gtx.Execute(op.InvalidateCmd{})
 	case helpInfoClosing:
 		if h.portion == 0 {
 			h.state = helpInfoClosed
 		} else {
 			h.portion -= 50
 		}
-		op.InvalidateOp{}.Add(gtx.Ops)
+		gtx.Execute(op.InvalidateCmd{})
 	}
 	var overlayClicked bool
-	for _, e := range h.click.Events(gtx) {
-		// Close the drawer if the user clicks the overlay area outside of the drawer.
-		if e.Type == gesture.TypePress && e.Position.X < gtx.Constraints.Max.X-drawerWidth {
+	for {
+		ce, ok := h.click.Update(gtx.Source)
+		if !ok {
+			break
+		}
+		if ce.Kind == gesture.KindPress && ce.Position.X < gtx.Constraints.Max.X-drawerWidth {
 			overlayClicked = true
 			break
 		}
 	}
-	if h.closeBtn.Clicked() || overlayClicked {
+	if h.closeBtn.Clicked(gtx) || overlayClicked {
 		h.state = helpInfoClosing
 	}
 	originMax := gtx.Constraints.Max

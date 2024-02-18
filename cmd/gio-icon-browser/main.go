@@ -6,6 +6,7 @@ import (
 	"flag"
 	"image"
 	"image/color"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -19,8 +20,8 @@ import (
 	"gioui.org/font"
 	"gioui.org/gesture"
 	"gioui.org/io/clipboard"
+	"gioui.org/io/event"
 	"gioui.org/io/key"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -33,7 +34,6 @@ import (
 
 const copyNotifDuration = time.Second * 3
 
-// CLI flags.
 var (
 	printFrameTimes  = flag.Bool("print-frame-times", false, "Print out how long each frame takes.")
 	printSearchTimes = flag.Bool("print-search-times", false, "Print out how long each search takes.")
@@ -87,27 +87,37 @@ type searchResponse struct {
 	seq     int
 }
 
-func (ib *iconBrowser) frame(gtx C) {
-	const topLevelKeySet = "/" +
-		"|Ctrl-[H,L,U," + key.NameSpace + "]" +
-		"|Ctrl-[[,]]" +
-		"|" + key.NameEscape +
-		"|" + key.NameUpArrow +
-		"|" + key.NameDownArrow +
-		"|" + key.NamePageUp +
-		"|" + key.NamePageDown +
-		"|" + key.NameHome +
-		"|" + key.NameEnd
+var topLevelKeyFilters = []event.Filter{
+	key.Filter{Name: "/"},
+	key.Filter{Name: "[", Required: key.ModCtrl},
+	key.Filter{Name: "[", Required: key.ModCtrl},
+	key.Filter{Name: "]", Required: key.ModCtrl},
+	key.Filter{Name: "H", Required: key.ModCtrl},
+	key.Filter{Name: "L", Required: key.ModCtrl},
+	key.Filter{Name: "U", Required: key.ModCtrl},
+	key.Filter{Name: key.NameSpace, Required: key.ModCtrl},
+	key.Filter{Name: key.NameEscape},
+	key.Filter{Name: key.NameUpArrow},
+	key.Filter{Name: key.NameDownArrow},
+	key.Filter{Name: key.NamePageUp},
+	key.Filter{Name: key.NamePageDown},
+	key.Filter{Name: key.NameHome},
+	key.Filter{Name: key.NameEnd},
+}
 
-	// Process any key events since the previous frame.
-	for _, ke := range gtx.Events(ib.win) {
-		if ke, ok := ke.(key.Event); ok {
+func (ib *iconBrowser) frame(gtx C) {
+	for {
+		event, ok := gtx.Event(topLevelKeyFilters...)
+		if !ok {
+			break
+		}
+		if ke, ok := event.(key.Event); ok {
 			ib.handleKeyEvent(gtx, ke)
 		}
 	}
 	// Gather key input on the entire window area.
 	areaStack := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops)
-	key.InputOp{Tag: ib.win, Keys: topLevelKeySet}.Add(gtx.Ops)
+	event.Op(gtx.Ops, ib.win)
 	ib.layout(gtx)
 	areaStack.Pop()
 }
@@ -128,10 +138,10 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 				ib.th.TextSize++
 			}
 		case "L", key.NameSpace:
-			ib.searchInput.Focus()
+			gtx.Execute(key.FocusCmd{Tag: &ib.searchInput})
 			ib.searchInput.SetCaret(ib.searchInput.Len(), 0)
 		case "U":
-			if ed := &ib.searchInput; ed.Focused() {
+			if ed := &ib.searchInput; gtx.Focused(ed) {
 				ed.SetText("")
 				ib.runSearch()
 			}
@@ -141,11 +151,11 @@ func (ib *iconBrowser) handleKeyEvent(gtx C, e key.Event) {
 	case 0:
 		switch e.Name {
 		case "/":
-			ib.searchInput.Focus()
+			gtx.Execute(key.FocusCmd{Tag: &ib.searchInput})
 		case key.NameEscape:
 			switch {
-			case ib.searchInput.Focused():
-				key.FocusOp{Tag: nil}.Add(gtx.Ops)
+			case gtx.Focused(&ib.searchInput):
+				gtx.Execute(key.FocusCmd{Tag: nil})
 			case ib.helpInfo.state == helpInfoOpened:
 				ib.helpInfo.state = helpInfoClosing
 			}
@@ -174,11 +184,18 @@ func (ib *iconBrowser) scrollResultListTop() {
 }
 
 func (ib *iconBrowser) layout(gtx C) {
-	for _, e := range ib.searchInput.Events() {
+	for {
+		e, ok := ib.searchInput.Update(gtx)
+		if !ok {
+			break
+		}
 		if _, ok := e.(widget.ChangeEvent); ok {
 			ib.runSearch()
 			break
 		}
+	}
+	if ib.openHelpBtn.Clicked(gtx) {
+		ib.helpInfo.state = helpInfoOpening
 	}
 	if ib.matchedIndices == nil {
 		ib.matchedIndices = allIndices[:]
@@ -217,9 +234,6 @@ func (ib *iconBrowser) layout(gtx C) {
 				return ib.copyNotif.layout(gtx, ib.th)
 			})
 		})
-	}
-	if ib.openHelpBtn.Clicked() {
-		ib.helpInfo.state = helpInfoOpening
 	}
 	if ib.helpInfo.state != helpInfoClosed {
 		ib.helpInfo.layout(gtx, ib.th)
@@ -294,8 +308,12 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	en := &allEntries[index]
 	click := &entryClicks[index]
 	var pressed bool
-	for _, e := range click.Events(gtx) {
-		if e.Type == gesture.TypePress {
+	for {
+		ce, ok := click.Update(gtx.Source)
+		if !ok {
+			break
+		}
+		if ce.Kind == gesture.KindPress {
 			pressed = true
 			break
 		}
@@ -303,12 +321,12 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 	if pressed {
 		click.lastPressAt = gtx.Now
 		varPath := "icons." + en.varName
-		clipboard.WriteOp{Text: varPath}.Add(gtx.Ops)
+		gtx.Execute(clipboard.WriteCmd{Type: "application/text", Data: io.NopCloser(strings.NewReader(varPath))})
 		ib.copyNotif = copyNotif{
 			msg: varPath,
 			at:  time.Now(),
 		}
-		op.InvalidateOp{}.Add(gtx.Ops)
+		gtx.Execute(op.InvalidateCmd{})
 		go func() {
 			time.Sleep(copyNotifDuration + time.Millisecond*100)
 			ib.win.Invalidate()
@@ -375,7 +393,7 @@ func (ib *iconBrowser) layEntry(gtx C, index int) D {
 		scale := 0.7 + (0.3 * pct)
 		af := f32.Affine2D{}.Scale(origin, f32.Pt(scale, scale))
 		op.Affine(af).Add(gtx.Ops)
-		op.InvalidateOp{}.Add(gtx.Ops)
+		gtx.Execute(op.InvalidateCmd{})
 	}
 
 	rrOp := clip.UniformRRect(image.Rectangle{Max: innerDims.Size}, 6).Push(gtx.Ops)
@@ -451,7 +469,21 @@ func run() error {
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
 		resultList:      widget.List{List: layout.List{Axis: layout.Vertical}},
 	}
-	ib.searchInput.Focus()
+	// ib.searchInput.Focus()
+
+	events := make(chan event.Event)
+	acks := make(chan struct{})
+
+	go func() {
+		for {
+			ev := win.NextEvent()
+			events <- ev
+			<-acks
+			if _, ok := ev.(app.DestroyEvent); ok {
+				return
+			}
+		}
+	}()
 
 	var ops op.Ops
 	for {
@@ -463,19 +495,21 @@ func run() error {
 				ib.scrollResultListTop()
 			}
 			ib.win.Invalidate()
-		case e := <-ib.win.Events():
+		case e := <-events:
 			switch e := e.(type) {
-			case system.FrameEvent:
+			case app.FrameEvent:
 				start := time.Now()
-				gtx := layout.NewContext(&ops, e)
+				gtx := app.NewContext(&ops, e)
 				ib.frame(gtx)
 				e.Frame(gtx.Ops)
 				if *printFrameTimes {
 					log.Println(time.Since(start))
 				}
-			case system.DestroyEvent:
+			case app.DestroyEvent:
+				acks <- struct{}{}
 				return e.Err
 			}
+			acks <- struct{}{}
 		}
 	}
 }
