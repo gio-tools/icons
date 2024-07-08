@@ -446,11 +446,10 @@ func (ib *iconBrowser) runSearch() {
 }
 
 func run() error {
-	win := app.NewWindow(
-		app.Title("Gio Icon Browser"),
-		app.MinSize(600, 600),
-		app.Size(980, 770),
-	)
+	var win app.Window
+	win.Option(app.Title("Gio Icon Browser"))
+	win.Option(app.MinSize(600, 600))
+	win.Option(app.Size(980, 770))
 
 	th := material.NewTheme()
 	th.Shaper = text.NewShaper(text.WithCollection(vegur.Collection()))
@@ -463,7 +462,7 @@ func run() error {
 	}
 
 	ib := iconBrowser{
-		win:             win,
+		win:             &win,
 		th:              th,
 		searchResponses: make(chan searchResponse),
 		searchInput:     widget.Editor{SingleLine: true, Submit: true},
@@ -476,7 +475,7 @@ func run() error {
 
 	go func() {
 		for {
-			ev := win.NextEvent()
+			ev := win.Event()
 			events <- ev
 			<-acks
 			if _, ok := ev.(app.DestroyEvent); ok {
